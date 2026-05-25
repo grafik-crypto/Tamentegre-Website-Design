@@ -1,0 +1,1448 @@
+<!DOCTYPE html>
+<html lang="tr" class="scroll-smooth">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tam Entegre | Kontrol Sende!</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Phosphor Icons -->
+    <script src="https://unpkg.com/@phosphor-icons/web"></script>
+    <!-- Three.js -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <!-- GLTFLoader -->
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/GLTFLoader.js"></script>
+    <!-- RoomEnvironment -->
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/environments/RoomEnvironment.js"></script>
+    
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: '#3B82F6',
+                        secondary: '#1E40AF',
+                        dark: '#0F172A',
+                    },
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
+        
+        body {
+            font-family: 'Inter', sans-serif;
+            overflow-x: hidden;
+            background-color: #FFFFFF;
+        }
+
+        /* Nav Glassmorphism Utilities */
+        .glass {
+            background: rgba(255, 255, 255, 0.7);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.5);
+        }
+
+        /* Dashboard İçin Özel Buzlu Cam Efekti */
+        .glass-dashboard {
+            background: rgba(255, 255, 255, 0.4);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.65);
+            box-shadow: 0 30px 70px rgba(0, 0, 0, 0.1);
+        }
+
+        .glass-dark {
+            background: rgba(15, 23, 42, 0.4);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+        }
+
+        /* 3D Tilt Card Base */
+        .tilt-card {
+            transform-style: preserve-3d;
+            will-change: transform;
+        }
+        
+        .tilt-content {
+            transform: translateZ(40px);
+            will-change: transform;
+        }
+
+        /* Scroll Reveal Animation Classes */
+        .reveal {
+            opacity: 0;
+            transform: translateY(50px);
+            transition: all 0.8s cubic-bezier(0.23, 1, 0.32, 1);
+        }
+        .reveal.active {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        /* Hero Wrapper Premium Background */
+        .hero-wrapper {
+            background: radial-gradient(circle at 80% 50%, #e0e7ff 0%, #f8fafc 50%, #ffffff 100%);
+            position: relative;
+        }
+
+        #canvas-container {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 0;
+            overflow: hidden;
+            background: transparent; 
+            pointer-events: none; 
+        }
+
+        /* Gradient Text */
+        .text-gradient {
+            background-clip: text;
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-image: linear-gradient(90deg, #2563EB, #3B82F6, #60A5FA);
+        }
+        
+        /* Dinamik Geçiş Pop-up Animasyonu (Fiyat Değiştirme) */
+        @keyframes popIn {
+            0% { transform: scale(0.96); opacity: 0.7; }
+            100% { transform: scale(1); opacity: 1; }
+        }
+        .animate-pop {
+            animation: popIn 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+        }
+
+        /* Dashboard Mockup Animation */
+        @keyframes float {
+            0% { transform: translateY(0px); }
+            50% { transform: translateY(-15px); }
+            100% { transform: translateY(0px); }
+        }
+        .animate-float {
+            animation: float 6s ease-in-out infinite;
+        }
+
+        /* Dashboard SVG Çizgi ve Nokta Animasyonları */
+        .animated-path-blue {
+            stroke-dasharray: 1000;
+            stroke-dashoffset: 1000;
+            animation: drawLine 3s cubic-bezier(0.4, 0, 0.2, 1) forwards infinite alternate;
+        }
+        .animated-path-gray {
+            stroke-dasharray: 1000;
+            stroke-dashoffset: 1000;
+            animation: drawLine 3s cubic-bezier(0.4, 0, 0.2, 1) forwards infinite alternate;
+            animation-delay: 0.5s;
+        }
+        @keyframes drawLine {
+            to { stroke-dashoffset: 0; }
+        }
+        .pulse-dot {
+            animation: pulse 2s infinite cubic-bezier(0.4, 0, 0.6, 1);
+            transform-origin: center;
+        }
+        @keyframes pulse {
+            0%, 100% { r: 5; opacity: 1; stroke-width: 3; }
+            50% { r: 8; opacity: 0.5; stroke-width: 6; }
+        }
+        
+        /* Pricing Mobile Scroll Snap Bar */
+        .hide-scrollbar::-webkit-scrollbar {
+            display: none;
+        }
+        .hide-scrollbar {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+        }
+
+        /* Mobil Logo Geçiş Animasyonu ve Estetik Ayarlar */
+        #brand-logo-link .logo-full,
+        #brand-logo-link .logo-icon {
+            transition: all 0.5s ease-in-out;
+            transform-origin: left center;
+        }
+        
+        #brand-logo-link .logo-icon {
+            transform: scale(0.8) translateX(-10px); 
+        }
+
+        @media (max-width: 1023px) {
+            .auth-expanded #brand-logo-link {
+                width: 45px !important; 
+                margin-left: 8px; 
+            }
+            .auth-expanded .logo-full {
+                opacity: 0 !important;
+                transform: translateX(-15px); 
+            }
+            .auth-expanded .logo-icon {
+                opacity: 1 !important;
+                transform: scale(1.3) translateX(2px) !important; 
+            }
+        }
+    </style>
+</head>
+<body class="text-slate-800 antialiased relative">
+
+    <!-- Top Announcement Bar -->
+    <div class="bg-[#229fff] text-[#eaf4ff] text-center py-2 text-xs sm:text-sm font-semibold relative z-50">
+        Lansmana özel ilk 15 gün ücretsiz!
+    </div>
+
+    <!-- Navigation -->
+    <nav class="fixed w-full z-50 transition-all duration-300" id="navbar">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-4 relative">
+            <div class="glass rounded-full px-4 sm:px-6 py-2 sm:py-3 flex justify-between items-center shadow-lg relative z-20">
+                
+                <!-- Logo: Mobil görünümde yumuşak geçiş ile ikona dönüşür -->
+                <a href="/Home/Index" id="brand-logo-link" class="flex items-center relative h-6 sm:h-9 w-[130px] sm:w-[180px] transition-all duration-500 shrink-0">
+                    <img src="https://www.tamentegre.com/images/tamentegrelogo.svg" alt="Tam Entegre Logo" class="logo-full absolute top-0 left-0 w-full h-full object-contain object-left opacity-100">
+                    <img src="https://tamentegre.com/images/tamentegre_favicon.svg" alt="Tam Entegre İkon" class="logo-icon absolute top-0 left-0 h-full w-auto object-contain object-left opacity-0 pointer-events-none">
+                </a>
+                
+                <!-- Desktop Menu -->
+                <div class="hidden lg:flex space-x-8">
+                    <a href="/Hakkimizda" class="text-slate-700 hover:text-[#229fff] font-bold transition">Hakkımızda</a>
+                    <a href="/Entegrasyonlar" class="text-slate-700 hover:text-[#229fff] font-bold transition">Entegrasyonlarımız</a>
+                    <a href="#pricing" class="text-slate-700 hover:text-[#229fff] font-bold transition">Fiyatlar</a>
+                    <a href="/Blog" class="text-slate-700 hover:text-[#229fff] font-bold transition">Blog</a>
+                    <a href="/Iletisim" class="text-slate-700 hover:text-[#229fff] font-bold transition">İletişim</a>
+                </div>
+
+                <!-- Right Side: Auth Group + Hamburger -->
+                <div class="flex items-center shrink-0">
+                    <!-- Auth Group (Mobilde Absolute Orta, Masaüstünde Sağda) -->
+                    <div id="auth-wrapper" class="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 scale-[0.75] sm:scale-[0.85] lg:static lg:translate-x-0 lg:translate-y-0 lg:scale-100 flex items-center justify-center lg:justify-end z-10 transition-all duration-500">
+                        <div id="auth-group" class="relative bg-[#f8f8f8] shadow-[inset_0px_3px_6px_rgba(0,0,0,0.08)] rounded-full h-[50px] w-[145px] transition-all duration-700 ease-in-out flex items-center overflow-hidden">
+                            <a href="https://app.tamentegre.com/UyeOl" class="absolute right-0 w-[115px] h-full flex items-center justify-center text-[#6C727D] font-bold text-[17px] hover:text-slate-800 transition-all opacity-0 duration-500" id="uye-ol-text" style="padding-right: 5px;">Üye Ol</a>
+                            <a href="https://app.tamentegre.com/OturumAc" id="giris-yap-btn" class="absolute left-0 top-0 w-[145px] h-full bg-[#229fff] hover:bg-[#1a85d6] text-white rounded-full flex items-center justify-center font-bold text-[17px] shadow-[0_4px_12px_rgba(34,159,255,0.4)] transition-all z-10 border border-[#6BB0FF]/30">Giriş Yap</a>
+                        </div>
+                    </div>
+                    
+                    <!-- Modern Hamburger Button -->
+                    <button id="mobile-menu-btn" class="lg:hidden text-slate-800 focus:outline-none flex items-center bg-white/50 p-2 rounded-full hover:bg-white/80 transition ml-2 sm:ml-4 shrink-0 relative z-20">
+                        <svg id="mobile-icon" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="transition-all duration-300">
+                            <!-- İki ince, zarif çizgi (Sleek modern hamburger) -->
+                            <line x1="4" y1="9" x2="20" y2="9"></line>
+                            <line x1="4" y1="15" x2="20" y2="15"></line>
+                        </svg>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Mobile Menu Dropdown -->
+            <div id="mobile-menu" class="absolute top-full left-4 right-4 mt-2 bg-white/95 backdrop-blur-xl border border-white/50 shadow-2xl rounded-2xl p-4 flex flex-col space-y-2 lg:hidden opacity-0 pointer-events-none transition-all duration-300 transform -translate-y-4 z-10">
+                <a href="/Hakkimizda" class="mobile-link text-slate-700 font-bold hover:text-[#229fff] transition p-3 border-b border-slate-100 rounded-lg hover:bg-blue-50">Hakkımızda</a>
+                <a href="/Entegrasyonlar" class="mobile-link text-slate-700 font-bold hover:text-[#229fff] transition p-3 border-b border-slate-100 rounded-lg hover:bg-blue-50">Entegrasyonlarımız</a>
+                <a href="#pricing" class="mobile-link text-slate-700 font-bold hover:text-[#229fff] transition p-3 border-b border-slate-100 rounded-lg hover:bg-blue-50">Fiyatlar</a>
+                <a href="/Blog" class="mobile-link text-slate-700 font-bold hover:text-[#229fff] transition p-3 border-b border-slate-100 rounded-lg hover:bg-blue-50">Blog</a>
+                <a href="/Iletisim" class="mobile-link text-slate-700 font-bold hover:text-[#229fff] transition p-3 rounded-lg hover:bg-blue-50">İletişim</a>
+            </div>
+        </div>
+    </nav>
+
+    <!-- KESİLME SORUNU İÇİN ORTAK WRAPPER (Hero + Marquee) -->
+    <div id="hero-wrapper" class="hero-wrapper w-full overflow-hidden">
+        <div id="canvas-container"></div> <!-- 3D Three.js Canvas -->
+
+        <!-- Hero Section -->
+        <section id="hero" class="relative flex flex-col justify-start pt-32 pb-10 z-10">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative w-full flex-grow flex flex-col justify-start mt-4 lg:mt-10">
+                
+                <!-- Top Part: Hero Text (Sol) & 3D Logo Boşluğu (Sağ) -->
+                <div class="flex flex-col lg:flex-row items-center gap-8">
+                    <!-- Text Container -->
+                    <div class="w-full lg:w-7/12 text-center lg:text-left reveal">
+                        
+                        <div class="inline-flex items-center gap-2 bg-white/80 backdrop-blur-md px-3 sm:px-4 py-1.5 rounded-full border border-blue-100 shadow-sm mb-6 max-w-full overflow-hidden text-ellipsis whitespace-nowrap">
+                            <span class="bg-[#229fff] text-white text-[10px] sm:text-xs font-bold px-2 py-0.5 rounded-full">Yeni</span>
+                            <span class="text-xs sm:text-sm font-medium text-slate-600 truncate">Trendyol komisyon tarifeleri güncellendi &rarr;</span>
+                        </div>
+
+                        <h1 class="text-4xl sm:text-5xl lg:text-6xl font-extrabold leading-tight mb-4 sm:mb-6 text-slate-900 drop-shadow-sm">
+                            Tam Entegre ile <br/>
+                            <span class="text-gradient">Kontrol Sende!</span>
+                        </h1>
+                        
+                        <p class="text-base sm:text-lg text-slate-600 mb-8 max-w-xl mx-auto lg:mx-0">
+                            Trendyol, Hepsiburada, Amazon ve tüm pazaryerlerindeki sipariş, stok ve faturalarınızı tek bir ekrandan, saniyeler içinde yönetin; operasyonel yükünüzü sıfıra indirin.
+                        </p>
+                        
+                        <div class="flex flex-col sm:flex-row items-center gap-4 justify-center lg:justify-start">
+                            <a href="https://app.tamentegre.com/UyeOl" class="bg-[#229fff] hover:bg-blue-600 text-white px-6 sm:px-8 py-3.5 rounded-full font-semibold text-base sm:text-lg transition shadow-[0_4px_15px_rgba(34,159,255,0.3)] flex items-center gap-2 w-full sm:w-auto justify-center">
+                                14 Gün Ücretsiz Deneyin <i class="ph ph-arrow-right"></i>
+                            </a>
+                            <a href="#features" class="glass text-slate-800 hover:bg-white border border-slate-200 px-6 sm:px-8 py-3.5 rounded-full font-semibold text-base sm:text-lg transition shadow-sm flex items-center gap-2 w-full sm:w-auto justify-center">
+                                <i class="ph ph-play-circle text-[#229fff] text-xl"></i> Özellikleri İncele
+                            </a>
+                        </div>
+
+                        <div class="mt-8 flex flex-col sm:flex-row items-center justify-center lg:justify-start gap-4 text-xs sm:text-sm text-slate-500 font-medium">
+                            <div class="flex -space-x-3">
+                                <img class="w-8 h-8 sm:w-10 sm:h-10 rounded-full border-2 border-white" src="https://i.pravatar.cc/100?img=1" alt="user">
+                                <img class="w-8 h-8 sm:w-10 sm:h-10 rounded-full border-2 border-white" src="https://i.pravatar.cc/100?img=2" alt="user">
+                                <img class="w-8 h-8 sm:w-10 sm:h-10 rounded-full border-2 border-white" src="https://i.pravatar.cc/100?img=3" alt="user">
+                                <img class="w-8 h-8 sm:w-10 sm:h-10 rounded-full border-2 border-white" src="https://i.pravatar.cc/100?img=4" alt="user">
+                            </div>
+                            <p class="text-center sm:text-left"><strong>1.200+ satıcı</strong> Tamentegre ile ayda 30.000+ siparişi otomatikleştiriyor</p>
+                        </div>
+                    </div>
+
+                    <!-- 3D Logo Placeholder -->
+                    <div class="w-full lg:w-5/12 h-[250px] lg:h-auto hidden lg:block"></div>
+                </div>
+
+                <!-- Bottom Part: Dashboard Mockup -->
+                <div class="w-full max-w-5xl mx-auto reveal animate-float perspective-1000 px-2 sm:px-0 mt-20 lg:mt-32">
+                    <div class="glass-dashboard tilt-card rounded-3xl p-6 sm:p-10 border border-white/80">
+                        <div class="tilt-content">
+                            <div class="flex flex-col sm:flex-row sm:justify-between sm:items-center mb-8 border-b border-slate-200/60 pb-6 gap-4 sm:gap-0">
+                                <div>
+                                    <p class="text-sm sm:text-base text-slate-500 font-medium mb-1">Bugünkü Net Cirom</p>
+                                    <h3 class="text-4xl sm:text-5xl font-bold text-slate-800 flex items-center gap-3">389.102 ₺ <span class="text-xs sm:text-sm font-bold text-emerald-600 bg-emerald-50 px-3 py-1.5 rounded-lg border border-emerald-100">↑ %12.4</span></h3>
+                                    <p class="text-xs sm:text-sm text-slate-400 mt-2">Dünkü Net Cirom: 346.013 ₺</p>
+                                </div>
+                                <div class="flex gap-2 sm:gap-3 text-xs sm:text-sm font-semibold w-full sm:w-auto">
+                                    <button class="flex-1 sm:flex-none bg-[#229fff] text-white px-4 py-2 rounded-lg shadow-md">Bugün</button>
+                                    <button class="flex-1 sm:flex-none bg-white/70 text-slate-600 border border-slate-200 px-4 py-2 rounded-lg shadow-sm transition hover:bg-white">Dün</button>
+                                    <button class="flex-1 sm:flex-none bg-white/70 text-slate-600 border border-slate-200 px-4 py-2 rounded-lg shadow-sm transition hover:bg-white">Son 7 Gün</button>
+                                </div>
+                            </div>
+                            
+                            <!-- Yukarı Yönlü ve Dinamik Animasyonlu Kesilmeyen SVG Chart -->
+                            <div class="w-full relative overflow-visible">
+                                <svg viewBox="0 0 800 200" class="w-full h-auto drop-shadow-md overflow-visible">
+                                    <!-- Grid lines -->
+                                    <path d="M0,40 L800,40 M0,100 L800,100 M0,160 L800,160" stroke="#e2e8f0" stroke-width="1.5" stroke-dasharray="6" fill="none"></path>
+                                    
+                                    <!-- Line 1 (Gray - Pasif/Önceki Dönem) - Yukarı Trend -->
+                                    <path class="animated-path-gray" d="M0,180 Q100,180 200,140 T400,110 T600,70 T800,50" stroke="#cbd5e1" stroke-width="3" fill="none"></path>
+                                    
+                                    <!-- Line 2 (Blue - Aktif/Şu Anki Dönem) - Hızla Yükselen Trend (Yukarıdan kesilmez) -->
+                                    <path class="animated-path-blue" d="M0,170 Q100,170 200,120 T400,90 T600,50 T800,25" stroke="#229fff" stroke-width="4" fill="none" class="drop-shadow-[0_6px_8px_rgba(34,159,255,0.4)]"></path>
+                                    
+                                    <!-- Animasyonlu Veri Noktaları (Zirvelerde) -->
+                                    <circle class="pulse-dot" cx="200" cy="120" r="5" fill="#229fff" stroke="white" stroke-width="3"></circle>
+                                    <circle class="pulse-dot" cx="400" cy="90" r="5" fill="#229fff" stroke="white" stroke-width="3"></circle>
+                                    <circle class="pulse-dot" cx="600" cy="50" r="5" fill="#229fff" stroke="white" stroke-width="3"></circle>
+                                    <circle class="pulse-dot" cx="800" cy="25" r="5" fill="#229fff" stroke="white" stroke-width="3"></circle>
+                                </svg>
+                                <div class="flex justify-between text-xs sm:text-sm text-slate-500 mt-4 px-2 font-medium">
+                                    <span>00:00</span>
+                                    <span>06:00</span>
+                                    <span>12:00</span>
+                                    <span>18:00</span>
+                                    <span>24:00</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Brands Marquee Section (JS ile Smooth Kontrol & Kesintisiz Sonsuz Döngü) -->
+        <section id="marquee" class="py-10 bg-white/50 backdrop-blur-md border-t border-slate-200/50 relative z-10 overflow-hidden">
+            <div class="max-w-full mx-auto text-center">
+                <p class="text-xs sm:text-sm font-medium text-slate-500 mb-8 px-4">Türkiye'nin büyüyen markaları operasyonlarını Tam Entegre ile yönetiyor</p>
+                <div class="marquee-wrapper relative w-full overflow-hidden flex cursor-pointer">
+                    <!-- MARKA RENKLERİ BURADA BELİRTİLMİŞTİR (hover:text-[RENK]) -->
+                    <div id="marquee-track" class="flex w-max opacity-70 transition-opacity duration-300 hover:opacity-100">
+                        
+                        <!-- SET 1 -->
+                        <div id="marquee-set-1" class="flex items-center gap-12 sm:gap-20 flex-shrink-0 px-6 sm:px-10">
+                            <span class="text-xl sm:text-2xl font-bold text-slate-700 grayscale hover:grayscale-0 transition-colors duration-300 hover:text-[#F27A1A]">Trendyol</span>
+                            <span class="text-xl sm:text-2xl font-bold text-slate-700 grayscale hover:grayscale-0 transition-colors duration-300 hover:text-[#FF6000]">Hepsiburada</span>
+                            <span class="text-xl sm:text-2xl font-bold text-slate-700 grayscale hover:grayscale-0 transition-colors duration-300 hover:text-[#5C3EBC]">N11</span>
+                            <span class="text-xl sm:text-2xl font-bold text-slate-700 grayscale hover:grayscale-0 transition-colors duration-300 hover:text-[#FF9900]">Amazon</span>
+                            <span class="text-xl sm:text-2xl font-bold text-slate-700 grayscale hover:grayscale-0 transition-colors duration-300 hover:text-[#00509E]">T-Soft</span>
+                            <span class="text-xl sm:text-2xl font-bold text-slate-700 grayscale hover:grayscale-0 transition-colors duration-300 hover:text-[#4F46E5]">İkas</span>
+                            <span class="text-xl sm:text-2xl font-bold text-slate-700 grayscale hover:grayscale-0 transition-colors duration-300 hover:text-[#95BF47]">Shopify</span>
+                            <span class="text-xl sm:text-2xl font-bold text-slate-700 grayscale hover:grayscale-0 transition-colors duration-300 hover:text-[#96588A]">WooCommerce</span>
+                        </div>
+                        
+                        <!-- SET 2 (Sonsuz pürüzsüz dönüş için Set 1'in birebir kopyası) -->
+                        <div class="flex items-center gap-12 sm:gap-20 flex-shrink-0 px-6 sm:px-10">
+                            <span class="text-xl sm:text-2xl font-bold text-slate-700 grayscale hover:grayscale-0 transition-colors duration-300 hover:text-[#F27A1A]">Trendyol</span>
+                            <span class="text-xl sm:text-2xl font-bold text-slate-700 grayscale hover:grayscale-0 transition-colors duration-300 hover:text-[#FF6000]">Hepsiburada</span>
+                            <span class="text-xl sm:text-2xl font-bold text-slate-700 grayscale hover:grayscale-0 transition-colors duration-300 hover:text-[#5C3EBC]">N11</span>
+                            <span class="text-xl sm:text-2xl font-bold text-slate-700 grayscale hover:grayscale-0 transition-colors duration-300 hover:text-[#FF9900]">Amazon</span>
+                            <span class="text-xl sm:text-2xl font-bold text-slate-700 grayscale hover:grayscale-0 transition-colors duration-300 hover:text-[#00509E]">T-Soft</span>
+                            <span class="text-xl sm:text-2xl font-bold text-slate-700 grayscale hover:grayscale-0 transition-colors duration-300 hover:text-[#4F46E5]">İkas</span>
+                            <span class="text-xl sm:text-2xl font-bold text-slate-700 grayscale hover:grayscale-0 transition-colors duration-300 hover:text-[#95BF47]">Shopify</span>
+                            <span class="text-xl sm:text-2xl font-bold text-slate-700 grayscale hover:grayscale-0 transition-colors duration-300 hover:text-[#96588A]">WooCommerce</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </div> <!-- Hero Kapsayıcı Sonu -->
+
+    <!-- Features Section -->
+    <section id="features" class="py-16 sm:py-24 relative overflow-hidden bg-slate-50">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
+            <div class="text-center mb-12 sm:mb-16 reveal">
+                <h2 class="text-3xl sm:text-4xl font-bold text-slate-900 mb-4">Operasyonun her parçası, <br class="sm:hidden"/><span class="text-gradient">tek panelde</span></h2>
+                <p class="text-sm sm:text-base text-slate-600 max-w-2xl mx-auto">Sipariş, stok, fatura, kargo ve raporlama — hepsi birbirine konuşan modüller halinde. Excel'siz, sekme atlamasız.</p>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 perspective-1000">
+                <!-- Feature Card 1 -->
+                <div class="tilt-card bg-white rounded-3xl p-6 sm:p-8 border border-slate-100/80 shadow-[0_8px_30px_rgb(0,0,0,0.04)] cursor-pointer reveal">
+                    <div class="tilt-content">
+                        <div class="flex justify-between items-start mb-4">
+                            <div class="w-12 h-12 bg-blue-50/80 rounded-2xl flex items-center justify-center text-[#229fff] text-2xl shadow-sm">
+                                <i class="ph ph-shopping-cart"></i>
+                            </div>
+                            <span class="text-[10px] font-semibold bg-slate-100/80 text-slate-500 px-3 py-1.5 rounded-full tracking-wide">Tüm pazaryerleri</span>
+                        </div>
+                        <h3 class="text-lg sm:text-xl font-bold text-slate-900 mb-2 sm:mb-3">Sipariş Yönetimi</h3>
+                        <p class="text-slate-500 text-sm leading-relaxed">Tüm pazaryerlerinden gelen siparişler tek listede toplanır. Toplu işlem, etiket basımı, iptal/iade akışları otomatik.</p>
+                    </div>
+                </div>
+
+                <!-- Feature Card 2 -->
+                <div class="tilt-card bg-white rounded-3xl p-6 sm:p-8 border border-slate-100/80 shadow-[0_8px_30px_rgb(0,0,0,0.04)] cursor-pointer reveal" style="transition-delay: 100ms;">
+                    <div class="tilt-content">
+                        <div class="flex justify-between items-start mb-4">
+                            <div class="w-12 h-12 bg-indigo-50/80 rounded-2xl flex items-center justify-center text-indigo-600 text-2xl shadow-sm">
+                                <i class="ph ph-receipt"></i>
+                            </div>
+                            <span class="text-[10px] font-semibold bg-slate-100/80 text-slate-500 px-3 py-1.5 rounded-full tracking-wide">GİB uyumlu</span>
+                        </div>
+                        <h3 class="text-lg sm:text-xl font-bold text-slate-900 mb-2 sm:mb-3">Otomatik Fatura</h3>
+                        <p class="text-slate-500 text-sm leading-relaxed">e-Arşiv ve e-Fatura entegrasyonu ile siparişler kesilir, muhasebe yazılımınıza otomatik düşer.</p>
+                    </div>
+                </div>
+
+                <!-- Feature Card 3 -->
+                <div class="tilt-card bg-white rounded-3xl p-6 sm:p-8 border border-slate-100/80 shadow-[0_8px_30px_rgb(0,0,0,0.04)] cursor-pointer reveal" style="transition-delay: 200ms;">
+                    <div class="tilt-content">
+                        <div class="flex justify-between items-start mb-4">
+                            <div class="w-12 h-12 bg-emerald-50/80 rounded-2xl flex items-center justify-center text-emerald-600 text-2xl shadow-sm">
+                                <i class="ph ph-arrows-clockwise"></i>
+                            </div>
+                            <span class="text-[10px] font-semibold bg-slate-100/80 text-slate-500 px-3 py-1.5 rounded-full tracking-wide">Gerçek zamanlı</span>
+                        </div>
+                        <h3 class="text-lg sm:text-xl font-bold text-slate-900 mb-2 sm:mb-3">Stok Senkronizasyonu</h3>
+                        <p class="text-slate-500 text-sm leading-relaxed">Tek envanter — tüm kanallarda eş zamanlı stok güncellemesi. Aşırı satış riskine son.</p>
+                    </div>
+                </div>
+
+                <!-- Feature Card 4 -->
+                <div class="tilt-card bg-white rounded-3xl p-6 sm:p-8 border border-slate-100/80 shadow-[0_8px_30px_rgb(0,0,0,0.04)] cursor-pointer reveal">
+                    <div class="tilt-content">
+                        <div class="flex justify-between items-start mb-4">
+                            <div class="w-12 h-12 bg-orange-50/80 rounded-2xl flex items-center justify-center text-orange-600 text-2xl shadow-sm">
+                                <i class="ph ph-truck"></i>
+                            </div>
+                            <span class="text-[10px] font-semibold bg-slate-100/80 text-slate-500 px-3 py-1.5 rounded-full tracking-wide">15+ kargo</span>
+                        </div>
+                        <h3 class="text-lg sm:text-xl font-bold text-slate-900 mb-2 sm:mb-3">Kargo Entegrasyonları</h3>
+                        <p class="text-slate-500 text-sm leading-relaxed">Yurtiçi, Aras, MNG, PTT, UPS ve daha fazlası. Etiket, takip ve teslimat durumu otomatik akar.</p>
+                    </div>
+                </div>
+
+                <!-- Feature Card 5 -->
+                <div class="tilt-card bg-white rounded-3xl p-6 sm:p-8 border border-slate-100/80 shadow-[0_8px_30px_rgb(0,0,0,0.04)] cursor-pointer reveal" style="transition-delay: 100ms;">
+                    <div class="tilt-content">
+                        <div class="flex justify-between items-start mb-4">
+                            <div class="w-12 h-12 bg-cyan-50/80 rounded-2xl flex items-center justify-center text-cyan-600 text-2xl shadow-sm">
+                                <i class="ph ph-trend-up"></i>
+                            </div>
+                            <span class="text-[10px] font-semibold bg-slate-100/80 text-slate-500 px-3 py-1.5 rounded-full tracking-wide">Net kâr odaklı</span>
+                        </div>
+                        <h3 class="text-lg sm:text-xl font-bold text-slate-900 mb-2 sm:mb-3">Karlılık Analizi</h3>
+                        <p class="text-slate-500 text-sm leading-relaxed">Komisyon, kargo, iade ve reklam giderleri düşülmüş gerçek net kâr. Ürün ve pazaryeri bazlı.</p>
+                    </div>
+                </div>
+
+                <!-- Feature Card 6 -->
+                <div class="tilt-card bg-white rounded-3xl p-6 sm:p-8 border border-slate-100/80 shadow-[0_8px_30px_rgb(0,0,0,0.04)] cursor-pointer reveal" style="transition-delay: 200ms;">
+                    <div class="tilt-content">
+                        <div class="flex justify-between items-start mb-4">
+                            <div class="w-12 h-12 bg-purple-50/80 rounded-2xl flex items-center justify-center text-purple-600 text-2xl shadow-sm">
+                                <i class="ph ph-users"></i>
+                            </div>
+                            <span class="text-[10px] font-semibold bg-slate-100/80 text-slate-500 px-3 py-1.5 rounded-full tracking-wide">Yerli CRM</span>
+                        </div>
+                        <h3 class="text-lg sm:text-xl font-bold text-slate-900 mb-2 sm:mb-3">Müşteri Yönetimi</h3>
+                        <p class="text-slate-500 text-sm leading-relaxed">Sipariş geçmişi, segmentler, otomatik mesajlar. Tekrar satın alımı artıran sade CRM.</p>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Quick Link Box -->
+            <div class="mt-8 bg-blue-50 rounded-xl p-4 sm:p-6 flex flex-col sm:flex-row items-center justify-between border border-blue-100 reveal cursor-pointer hover:bg-blue-100 transition text-center sm:text-left gap-4 sm:gap-0">
+                <div class="flex flex-col sm:flex-row items-center gap-4">
+                    <div class="w-12 h-12 bg-[#229fff] text-white rounded-lg flex items-center justify-center text-xl shadow-md shrink-0">
+                        <i class="ph ph-cube"></i>
+                    </div>
+                    <div>
+                        <h4 class="font-bold text-slate-900">30+ entegrasyon, kurulum 10 dakika</h4>
+                        <p class="text-xs sm:text-sm text-slate-600 mt-1">Pazaryeri, kargo, e-fatura, muhasebe ve banka — hepsi tek tıkla bağlanır.</p>
+                    </div>
+                </div>
+                <div class="text-[#229fff] font-semibold flex items-center gap-2 text-sm sm:text-base whitespace-nowrap">
+                    Tüm entegrasyonları gör <i class="ph ph-arrow-right"></i>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Stats / Dark Section (Canlı Akan Sayaçlar) -->
+    <section id="stats" class="py-16 sm:py-24 bg-[#0A1426] text-white relative overflow-hidden">
+        <div class="absolute top-0 left-0 w-full h-full overflow-hidden z-0">
+            <div class="absolute top-[-20%] left-[-10%] w-96 h-96 bg-[#229fff] rounded-full mix-blend-multiply filter blur-3xl opacity-20"></div>
+            <div class="absolute bottom-[-20%] right-[-10%] w-96 h-96 bg-[#1e3a8a] rounded-full mix-blend-multiply filter blur-3xl opacity-20"></div>
+        </div>
+
+        <div class="max-w-7xl mx-auto px-4 relative z-10 text-center">
+            <div class="inline-flex items-center gap-2 bg-slate-800 px-3 py-1 rounded-full border border-slate-700 text-[10px] sm:text-xs text-slate-300 mb-6 reveal">
+                <div class="w-2 h-2 rounded-full bg-[#229fff] animate-pulse"></div> Sayılarla Tam Entegre
+            </div>
+            <h2 class="text-3xl sm:text-4xl md:text-5xl font-bold mb-4 reveal">Sayılar tek başına konuşuyor</h2>
+            <p class="text-sm sm:text-base text-slate-400 mb-12 sm:mb-16 max-w-xl mx-auto reveal">Türkiye genelinde 1.200+ satıcının operasyonunu kesintisiz çalıştırıyoruz.</p>
+
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 sm:gap-8">
+                <!-- Stat 1 -->
+                <div class="p-6 border border-slate-700/50 rounded-2xl bg-slate-800/30 backdrop-blur tilt-card reveal">
+                    <div class="tilt-content">
+                        <!-- data-target ile hedeflenen sayılar JS tarafından canlı doldurulur -->
+                        <h3 class="text-4xl sm:text-5xl font-bold text-white mb-2 counter-value" data-target="20" data-suffix=" M+">0</h3>
+                        <p class="text-base sm:text-lg font-semibold text-[#229fff] mb-1">Anlık Stok Güncellemesi</p>
+                        <p class="text-xs sm:text-sm text-slate-500">Manuel işlere kıyasla</p>
+                    </div>
+                </div>
+                <!-- Stat 2 -->
+                <div class="p-6 border border-slate-700/50 rounded-2xl bg-slate-800/30 backdrop-blur tilt-card reveal" style="transition-delay: 100ms;">
+                    <div class="tilt-content">
+                        <h3 class="text-4xl sm:text-5xl font-bold text-[#229fff] mb-2 counter-value" data-target="4.5" data-suffix=" M+" data-float="true">0</h3>
+                        <p class="text-base sm:text-lg font-semibold text-white mb-1">Ürün Yüklemesi</p>
+                        <p class="text-xs sm:text-sm text-slate-500">Tek panelden yönetilen</p>
+                    </div>
+                </div>
+                <!-- Stat 3 -->
+                <div class="p-6 border border-slate-700/50 rounded-2xl bg-slate-800/30 backdrop-blur tilt-card reveal" style="transition-delay: 200ms;">
+                    <div class="tilt-content">
+                        <h3 class="text-4xl sm:text-5xl font-bold text-white mb-2 counter-value" data-target="99.9" data-prefix="%" data-float="true">0</h3>
+                        <p class="text-base sm:text-lg font-semibold text-[#229fff] mb-1">Senkronizasyon kesintisiz</p>
+                        <p class="text-xs sm:text-sm text-slate-500">Stok, fiyat ve sipariş</p>
+                    </div>
+                </div>
+                <!-- Stat 4 -->
+                <div class="p-6 border border-[#229fff]/50 rounded-2xl bg-slate-800/30 backdrop-blur tilt-card shadow-[0_0_15px_rgba(34,159,255,0.2)] reveal" style="transition-delay: 300ms;">
+                    <div class="tilt-content">
+                        <h3 class="text-4xl sm:text-5xl font-bold text-white mb-2 counter-value" data-target="30" data-suffix="+">0</h3>
+                        <p class="text-base sm:text-lg font-semibold text-[#229fff] mb-1">Entegrasyon</p>
+                        <p class="text-xs sm:text-sm text-slate-500">Pazaryeri, kargo, e-fatura</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Pricing Section -->
+    <section id="pricing" class="py-16 sm:py-24 bg-slate-50">
+        <div class="max-w-7xl mx-auto px-4">
+            <div class="text-center mb-12 sm:mb-16 reveal">
+                <span class="bg-white text-slate-500 px-4 py-1 rounded-full text-[10px] sm:text-xs font-semibold mb-4 inline-block border border-slate-200 shadow-sm"><i class="ph-fill ph-tag text-[#229fff]"></i> Fiyatlandırma</span>
+                <h2 class="text-3xl sm:text-4xl font-bold text-slate-900 mb-4">İşinizle birlikte <br class="sm:hidden"/><span class="text-[#229fff]">büyüyen planlar</span></h2>
+                <p class="text-sm sm:text-base text-slate-600">Tüm planlarda kurulum ve eğitim ücretsiz. İstediğiniz zaman iptal edebilirsiniz.</p>
+                
+                <div class="mt-8 inline-flex bg-white rounded-full p-1 border border-slate-200 shadow-sm overflow-hidden">
+                    <button id="btn-monthly" class="px-4 sm:px-6 py-2 rounded-full bg-blue-50 text-blue-600 font-semibold text-xs sm:text-sm transition-all duration-300">Aylık</button>
+                    <button id="btn-yearly" class="px-4 sm:px-6 py-2 rounded-full text-slate-600 hover:text-slate-900 font-semibold text-xs sm:text-sm flex items-center gap-1 sm:gap-2 transition-all duration-300">Yıllık <span class="bg-green-100 text-green-700 text-[8px] sm:text-[10px] px-2 py-0.5 rounded-full">-20%</span></button>
+                </div>
+            </div>
+
+            <!-- Mobil görünümde yatay kaydırma, üstte kesilmemesi için pt-6 pb-12 boşlukları verildi -->
+            <div class="flex flex-row overflow-x-auto hide-scrollbar pt-6 pb-12 snap-x snap-mandatory xl:grid xl:grid-cols-4 gap-6 items-stretch w-full">
+                
+                <!-- Plan 1 -->
+                <div class="reveal min-w-[85vw] sm:min-w-[320px] xl:min-w-0 snap-center shrink-0">
+                    <div class="pricing-card-inner bg-white rounded-3xl p-6 sm:p-8 border border-slate-100 shadow-lg flex flex-col h-full transition-transform duration-300 hover:-translate-y-3 hover:shadow-[0_20px_40px_rgba(0,0,0,0.08)]">
+                        <h3 class="text-xl sm:text-2xl font-bold text-slate-900 mb-2">Başlangıç</h3>
+                        <p class="text-xs sm:text-sm text-slate-500 h-10">Tek pazaryeri ile başlamak isteyen küçük markalar.</p>
+                        <div class="my-6">
+                            <span class="text-4xl sm:text-5xl font-extrabold text-slate-900 price-amount" data-monthly="899" data-yearly="719">899</span><span class="text-sm sm:text-base text-slate-500"> ₺/ay</span>
+                        </div>
+                        <button class="w-full py-3 rounded-full border-2 border-slate-200 text-slate-700 font-bold hover:border-[#229fff] hover:text-[#229fff] transition mb-6 sm:mb-8 text-sm sm:text-base">Ücretsiz başla</button>
+                        
+                        <div class="flex-grow">
+                            <p class="text-xs font-bold text-slate-900 uppercase tracking-wider mb-4">Dahil Olanlar</p>
+                            <ul class="space-y-3 sm:space-y-4 text-xs sm:text-sm text-slate-600">
+                                <li class="flex items-center gap-3"><i class="ph-fill ph-check-circle text-emerald-500 text-lg"></i> 1 Pazaryeri bağlantısı</li>
+                                <li class="flex items-center gap-3"><i class="ph-fill ph-check-circle text-emerald-500 text-lg"></i> 500 Sipariş / ay</li>
+                                <li class="flex items-center gap-3"><i class="ph-fill ph-check-circle text-emerald-500 text-lg"></i> Otomatik fatura (e-Arşiv)</li>
+                                <li class="flex items-center gap-3"><i class="ph-fill ph-check-circle text-emerald-500 text-lg"></i> E-posta destek</li>
+                                <li class="flex items-center gap-3 text-slate-400"><i class="ph-fill ph-minus-circle text-slate-300 text-lg"></i> <del>Net kâr-zarar analizi</del></li>
+                                <li class="flex items-center gap-3 text-slate-400"><i class="ph-fill ph-minus-circle text-slate-300 text-lg"></i> <del>Toplu ürün yükleme</del></li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Plan 2 -->
+                <div class="reveal min-w-[85vw] sm:min-w-[320px] xl:min-w-0 snap-center shrink-0">
+                    <div class="pricing-card-inner bg-white rounded-3xl p-6 sm:p-8 border border-slate-100 shadow-lg flex flex-col h-full transition-transform duration-300 hover:-translate-y-3 hover:shadow-[0_20px_40px_rgba(0,0,0,0.08)]">
+                        <h3 class="text-xl sm:text-2xl font-bold text-slate-900 mb-2">Büyüme</h3>
+                        <p class="text-xs sm:text-sm text-slate-500 h-10">Birden çok kanalda satışlarını artıranlar.</p>
+                        <div class="my-6">
+                            <span class="text-4xl sm:text-5xl font-extrabold text-slate-900 price-amount" data-monthly="1.690" data-yearly="1.350">1.690</span><span class="text-sm sm:text-base text-slate-500"> ₺/ay</span>
+                        </div>
+                        <button class="w-full py-3 rounded-full border-2 border-slate-200 text-slate-700 font-bold hover:border-[#229fff] hover:text-[#229fff] transition mb-6 sm:mb-8 text-sm sm:text-base">14 gün ücretsiz dene</button>
+                        
+                        <div class="flex-grow">
+                            <p class="text-xs font-bold text-slate-900 uppercase tracking-wider mb-4">Dahil Olanlar</p>
+                            <ul class="space-y-3 sm:space-y-4 text-xs sm:text-sm text-slate-600">
+                                <li class="flex items-center gap-3"><i class="ph-fill ph-check-circle text-emerald-500 text-lg"></i> 3 Pazaryeri bağlantısı</li>
+                                <li class="flex items-center gap-3"><i class="ph-fill ph-check-circle text-emerald-500 text-lg"></i> 2.500 Sipariş / ay</li>
+                                <li class="flex items-center gap-3"><i class="ph-fill ph-check-circle text-emerald-500 text-lg"></i> Kargo Entegrasyonu</li>
+                                <li class="flex items-center gap-3"><i class="ph-fill ph-check-circle text-emerald-500 text-lg"></i> Toplu ürün yönetimi</li>
+                                <li class="flex items-center gap-3 text-slate-400"><i class="ph-fill ph-minus-circle text-slate-300 text-lg"></i> <del>Otomatik fiyat kuralları</del></li>
+                                <li class="flex items-center gap-3 text-slate-400"><i class="ph-fill ph-minus-circle text-slate-300 text-lg"></i> <del>WhatsApp Destek</del></li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Plan 3 (Önerilen/Koyu Kart) -->
+                <div class="reveal min-w-[85vw] sm:min-w-[320px] xl:min-w-0 snap-center shrink-0 xl:-translate-y-4">
+                    <div class="pricing-card-inner bg-[#0A1426] rounded-3xl p-6 sm:p-8 border border-[#229fff] shadow-[0_15px_40px_rgba(34,159,255,0.2)] flex flex-col h-full transition-transform duration-300 hover:-translate-y-3 hover:shadow-[0_20px_50px_rgba(34,159,255,0.35)]">
+                        <div class="bg-[#229fff] text-white px-3 py-1 rounded-lg text-xs font-bold inline-block self-start mb-4 tracking-wide uppercase">En Çok Tercih Edilen</div>
+                        
+                        <h3 class="text-xl sm:text-2xl font-bold text-white mb-2">Pro</h3>
+                        <p class="text-xs sm:text-sm text-slate-400 h-10">Tüm süreçleri otomatize eden profesyoneller.</p>
+                        <div class="my-6 text-white">
+                            <span class="text-4xl sm:text-5xl font-extrabold price-amount" data-monthly="2.490" data-yearly="1.990">2.490</span><span class="text-sm sm:text-base text-slate-400"> ₺/ay</span>
+                        </div>
+                        <button class="w-full py-3 rounded-full bg-[#229fff] text-white font-bold hover:bg-blue-500 shadow-lg shadow-blue-500/30 transition mb-6 sm:mb-8 text-sm sm:text-base">14 gün ücretsiz dene</button>
+                        
+                        <div class="flex-grow">
+                            <p class="text-xs font-bold text-slate-300 uppercase tracking-wider mb-4">Dahil Olanlar</p>
+                            <ul class="space-y-3 sm:space-y-4 text-xs sm:text-sm text-slate-300">
+                                <li class="flex items-center gap-3"><i class="ph-fill ph-check-circle text-[#229fff] text-lg"></i> 5 Pazaryeri bağlantısı</li>
+                                <li class="flex items-center gap-3"><i class="ph-fill ph-check-circle text-[#229fff] text-lg"></i> 5.000 Sipariş / ay</li>
+                                <li class="flex items-center gap-3"><i class="ph-fill ph-check-circle text-[#229fff] text-lg"></i> Net kâr-zarar analizi</li>
+                                <li class="flex items-center gap-3"><i class="ph-fill ph-check-circle text-[#229fff] text-lg"></i> Otomatik fiyat kuralları</li>
+                                <li class="flex items-center gap-3"><i class="ph-fill ph-check-circle text-[#229fff] text-lg"></i> Öncelikli WhatsApp destek</li>
+                                <li class="flex items-center gap-3 text-slate-500"><i class="ph-fill ph-minus-circle text-slate-600 text-lg"></i> <del>Çoklu depo yönetimi</del></li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Plan 4 -->
+                <div class="reveal min-w-[85vw] sm:min-w-[320px] xl:min-w-0 snap-center shrink-0">
+                    <div class="pricing-card-inner bg-white rounded-3xl p-6 sm:p-8 border border-slate-100 shadow-lg flex flex-col h-full transition-transform duration-300 hover:-translate-y-3 hover:shadow-[0_20px_40px_rgba(0,0,0,0.08)]">
+                        <h3 class="text-xl sm:text-2xl font-bold text-slate-900 mb-2">Kurumsal</h3>
+                        <p class="text-xs sm:text-sm text-slate-500 h-10">Yüksek hacimli mağazalar ve çoklu şirketler.</p>
+                        <div class="my-6 flex items-end gap-2 h-[48px] sm:h-[60px]">
+                            <span class="text-4xl sm:text-5xl font-extrabold text-slate-900">Özel</span><span class="text-sm sm:text-base text-slate-500 pb-1 sm:pb-2">teklif</span>
+                        </div>
+                        <button class="w-full py-3 rounded-full border-2 border-slate-200 text-slate-700 font-bold hover:border-[#229fff] hover:text-[#229fff] transition mb-6 sm:mb-8 text-sm sm:text-base">Satışla görüş</button>
+                        
+                        <div class="flex-grow">
+                            <p class="text-xs font-bold text-slate-900 uppercase tracking-wider mb-4">Dahil Olanlar</p>
+                            <ul class="space-y-3 sm:space-y-4 text-xs sm:text-sm text-slate-600">
+                                <li class="flex items-center gap-3"><i class="ph-fill ph-check-circle text-emerald-500 text-lg"></i> Sınırsız pazaryeri</li>
+                                <li class="flex items-center gap-3"><i class="ph-fill ph-check-circle text-emerald-500 text-lg"></i> Sınırsız sipariş</li>
+                                <li class="flex items-center gap-3"><i class="ph-fill ph-check-circle text-emerald-500 text-lg"></i> Özel API limitleri</li>
+                                <li class="flex items-center gap-3"><i class="ph-fill ph-check-circle text-emerald-500 text-lg"></i> ERP entegrasyonu</li>
+                                <li class="flex items-center gap-3"><i class="ph-fill ph-check-circle text-emerald-500 text-lg"></i> Çoklu şirket / depo</li>
+                                <li class="flex items-center gap-3"><i class="ph-fill ph-check-circle text-emerald-500 text-lg"></i> Müşteri yöneticisi</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <p class="text-center text-[10px] sm:text-xs text-slate-400 mt-2">Tüm fiyatlara KDV dahil değildir. Kurumsal anlaşmalarda özel fiyat sunulur.</p>
+        </div>
+    </section>
+
+    <!-- Final CTA Area -->
+    <section class="py-16 sm:py-20 px-4 bg-white">
+        <div class="max-w-5xl mx-auto bg-gradient-to-br from-blue-50 via-white to-blue-50 rounded-3xl p-8 sm:p-10 md:p-16 text-center border border-white shadow-xl relative overflow-hidden reveal">
+            <span class="bg-white text-slate-600 px-3 sm:px-4 py-1 rounded-full text-[10px] sm:text-xs font-semibold mb-4 sm:mb-6 inline-block border border-slate-200"><i class="ph-fill ph-rocket text-[#229fff]"></i> Hemen başlayın</span>
+            <h2 class="text-2xl sm:text-3xl md:text-5xl font-bold text-slate-900 mb-4 sm:mb-6">E-ticaret operasyonunuzu<br/><span class="text-[#229fff]">tek platformda toplayın</span></h2>
+            <p class="text-sm sm:text-base text-slate-600 mb-6 sm:mb-8 max-w-2xl mx-auto">14 gün ücretsiz deneme, kredi kartı gerektirmez. Kurulum 10 dakika. Memnun kalmazsanız tek tıkla iptal.</p>
+            
+            <div class="flex flex-col sm:flex-row justify-center gap-3 sm:gap-4">
+                <button class="bg-[#229fff] hover:bg-blue-600 text-white px-6 sm:px-8 py-3.5 rounded-full font-bold transition shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 flex items-center justify-center gap-2 text-sm sm:text-base">Şimdi Başlayın <i class="ph ph-arrow-right"></i></button>
+                <button class="bg-white hover:bg-slate-50 border border-slate-200 text-slate-700 px-6 sm:px-8 py-3.5 rounded-full font-bold transition shadow-sm flex items-center justify-center text-sm sm:text-base">Satışla görüşmek istiyorum</button>
+            </div>
+            
+            <div class="mt-6 sm:mt-8 flex flex-wrap justify-center gap-3 sm:gap-4 text-[10px] sm:text-xs font-medium text-slate-500">
+                <span class="flex items-center gap-1"><i class="ph ph-check text-[#229fff]"></i> 14 gün ücretsiz</span>
+                <span class="flex items-center gap-1"><i class="ph ph-check text-[#229fff]"></i> Kredi kartı yok</span>
+                <span class="flex items-center gap-1"><i class="ph ph-check text-[#229fff]"></i> 10 dakikada kurulum</span>
+                <span class="flex items-center gap-1"><i class="ph ph-check text-[#229fff]"></i> KVKK uyumlu</span>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="bg-[#0A1426] text-slate-400 py-10 sm:py-16 border-t border-slate-800">
+        <div class="max-w-7xl mx-auto px-4 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-10">
+            <div class="col-span-1 sm:col-span-2 lg:col-span-1">
+                <a href="/Home/Index" class="flex items-center mb-6">
+                    <img src="https://www.tamentegre.com/images/tamentegrelogo.svg" alt="Tam Entegre Logo" class="h-8 brightness-0 invert">
+                </a>
+                <p class="text-sm mb-6 text-slate-400 leading-relaxed">E-Ticaret ve Ön Muhasebe süreçlerinizi tek noktadan yönetin.</p>
+                <div class="flex gap-3">
+                    <a href="https://www.facebook.com/TamEntegre" target="_blank" class="w-10 h-10 rounded-full bg-slate-800 flex items-center justify-center hover:bg-[#1877F2] hover:text-white transition text-white"><i class="ph-fill ph-facebook-logo text-xl"></i></a>
+                    <a href="https://twitter.com/TamEntegre" target="_blank" class="w-10 h-10 rounded-full bg-slate-800 flex items-center justify-center hover:bg-[#1DA1F2] hover:text-white transition text-white"><i class="ph-fill ph-twitter-logo text-xl"></i></a>
+                    <a href="https://www.instagram.com/TamEntegre/" target="_blank" class="w-10 h-10 rounded-full bg-slate-800 flex items-center justify-center hover:bg-[#E4405F] hover:text-white transition text-white"><i class="ph-fill ph-instagram-logo text-xl"></i></a>
+                    <a href="https://www.linkedin.com/company/tamentegre/" target="_blank" class="w-10 h-10 rounded-full bg-slate-800 flex items-center justify-center hover:bg-[#0A66C2] hover:text-white transition text-white"><i class="ph-fill ph-linkedin-logo text-xl"></i></a>
+                    <a href="https://www.youtube.com/TamEntegre" target="_blank" class="w-10 h-10 rounded-full bg-slate-800 flex items-center justify-center hover:bg-[#CD201F] hover:text-white transition text-white"><i class="ph-fill ph-youtube-logo text-xl"></i></a>
+                    <a href="https://entegrasyon.medium.com/" target="_blank" class="w-10 h-10 rounded-full bg-slate-800 flex items-center justify-center hover:bg-[#000000] hover:text-white transition text-white"><i class="ph-fill ph-article text-xl"></i></a>
+                </div>
+            </div>
+            <div>
+                <h4 class="text-white font-bold mb-6 text-base">Entegrasyon & Servisler</h4>
+                <ul class="space-y-3 text-sm">
+                    <li><a href="/Entegrasyonlar" class="hover:text-blue-400 transition">Entegrasyonlarımız</a></li>
+                    <li><a href="/OnMuhasebe" class="hover:text-blue-400 transition">Ön Muhasebe</a></li>
+                    <li><a href="/EFaturaBasvuruFormu" class="hover:text-blue-400 transition">E-Fatura Başvuru Formu</a></li>
+                    <li><a href="/Araclar" class="hover:text-blue-400 transition">Hesaplama Aracı</a></li>
+                    <li><a href="/ApiTalebiNasilYapilir" class="hover:text-blue-400 transition">Api Talebi Nasıl Yapılır?</a></li>
+                    <li><a href="/CozumOrtakligi" class="hover:text-blue-400 transition">Çözüm Ortaklığı</a></li>
+                </ul>
+            </div>
+            <div>
+                <h4 class="text-white font-bold mb-6 text-base">Hızlı Bağlantılar</h4>
+                <ul class="space-y-3 text-sm">
+                    <li><a href="/Fiyatlar" class="hover:text-blue-400 transition">Fiyatlar</a></li>
+                    <li><a href="/Referanslar" class="hover:text-blue-400 transition">Referanslar</a></li>
+                    <li><a href="/Destek" class="hover:text-blue-400 transition">Destek</a></li>
+                    <li><a href="/HesapNumaralari" class="hover:text-blue-400 transition">Hesap Numaraları</a></li>
+                    <li><a href="https://www.facebook.com/groups/ETicaret.ve.Pazaryeri.Saticilari/" target="_blank" class="hover:text-blue-400 transition">Facebook Grubumuz</a></li>
+                    <li><a href="https://t.me/joinchat/Q7VTgUZkHp1IFI1AYNPgvw" target="_blank" class="hover:text-blue-400 transition">Telegram Grubumuz</a></li>
+                </ul>
+            </div>
+            <div>
+                <h4 class="text-white font-bold mb-6 text-base">Bize Ulaşın</h4>
+                <ul class="space-y-4 text-sm">
+                    <li class="flex items-start gap-3">
+                        <i class="ph-fill ph-phone text-[#229fff] text-xl"></i> 
+                        <a href="tel:+908502550985" class="hover:text-blue-400 transition mt-0.5">0850 255 09 85</a>
+                    </li>
+                    <li class="flex items-start gap-3">
+                        <i class="ph-fill ph-envelope-simple text-[#229fff] text-xl"></i> 
+                        <a href="mailto:iletisim@tamentegre.com" class="hover:text-blue-400 transition mt-0.5">iletisim@tamentegre.com</a>
+                    </li>
+                    <li class="flex items-start gap-3">
+                        <i class="ph-fill ph-map-pin text-[#229fff] text-xl"></i> 
+                        <span class="mt-0.5 leading-relaxed">Esentepe, Büyükdere Cd. No:100 D:102, <br/> 34394 Şişli/İstanbul</span>
+                    </li>
+                </ul>
+            </div>
+        </div>
+        <div class="max-w-7xl mx-auto px-4 mt-12 pt-8 border-t border-slate-800 text-sm text-center flex flex-col md:flex-row justify-between items-center gap-4">
+            <p>&copy; 2026 TamEntegre.com | Tüm Hakları Saklıdır</p>
+            <div class="flex items-center gap-4">
+                <a href="/KVKK" class="hover:text-white transition text-slate-500">KVKK Aydınlatma Metni</a>
+            </div>
+        </div>
+    </footer>
+
+    <!-- WhatsApp Balonu -->
+    <div id="wa-widget" class="fixed bottom-6 right-6 z-50 flex flex-col items-end gap-3 translate-y-20 opacity-0 pointer-events-none transition-all duration-700 ease-out">
+        <div id="wa-bubble" class="bg-white p-4 rounded-2xl shadow-[0_10px_40px_rgba(0,0,0,0.15)] border border-slate-100 flex flex-col gap-3 w-[260px] relative pointer-events-auto transition-all duration-300 origin-bottom-right">
+            
+            <button id="wa-close" class="absolute top-2 right-2 text-slate-400 hover:text-slate-700 p-1 transition-colors">
+                <i class="ph-bold ph-x"></i>
+            </button>
+
+            <div class="flex items-center gap-3 border-b border-slate-100 pb-3 pr-4">
+                <div class="w-10 h-10 bg-[#25D366]/10 rounded-full flex items-center justify-center text-[#25D366] shrink-0">
+                    <i class="ph-fill ph-headset text-xl"></i>
+                </div>
+                <div>
+                    <p class="text-[10px] text-slate-500 font-bold uppercase tracking-wider">Canlı Destek</p>
+                    <p class="text-sm font-bold text-slate-800 leading-snug">Nasıl destek olabiliriz?</p>
+                </div>
+            </div>
+            <a href="https://wa.me/908502550985" target="_blank" class="bg-[#25D366] text-white px-4 py-2.5 rounded-xl text-sm font-bold flex items-center justify-center gap-2 hover:bg-[#20b858] transition-colors shadow-md shadow-[#25D366]/30">
+                <i class="ph-fill ph-whatsapp-logo text-lg"></i> WhatsApp'tan Yazın
+            </a>
+        </div>
+
+        <button id="wa-icon" class="pointer-events-auto bg-[#25D366] text-white p-4 rounded-full shadow-[0_8px_25px_rgba(37,211,102,0.4)] hover:scale-110 transition-transform flex items-center justify-center gap-2 hidden">
+            <i class="ph-fill ph-whatsapp-logo text-3xl"></i>
+        </button>
+    </div>
+
+    <!-- Scripts -->
+    <script>
+        /* -----------------------------------------------------------
+           1. Navbar Scroll Effect (Mobil Gizleme Eklendi)
+        ----------------------------------------------------------- */
+        let lastScrollY = window.scrollY;
+        window.addEventListener('scroll', () => {
+            const nav = document.getElementById('navbar');
+            const currentScrollY = window.scrollY;
+
+            // Yukarıda iken transparan, aşağı indikçe beyaz
+            if (currentScrollY > 50) {
+                nav.classList.add('py-2');
+                nav.classList.remove('mt-4');
+            } else {
+                nav.classList.remove('py-2');
+                nav.classList.add('mt-4');
+            }
+
+            // Mobil cihazlarda aşağı kaydırırken menüyü gizle, yukarı kaydırırken göster
+            if (window.innerWidth < 1024) {
+                if (currentScrollY > lastScrollY && currentScrollY > 100) {
+                    nav.classList.add('-translate-y-full', 'opacity-0');
+                } else {
+                    nav.classList.remove('-translate-y-full', 'opacity-0');
+                }
+            } else {
+                nav.classList.remove('-translate-y-full', 'opacity-0');
+            }
+
+            lastScrollY = currentScrollY;
+        });
+
+        /* -----------------------------------------------------------
+           2. Mobile Hamburger Menu Toggle
+        ----------------------------------------------------------- */
+        const mobileBtn = document.getElementById('mobile-menu-btn');
+        const mobileMenu = document.getElementById('mobile-menu');
+        const mobileIcon = document.getElementById('mobile-icon');
+        const mobileLinks = document.querySelectorAll('.mobile-link');
+
+        function toggleMenu() {
+            const isClosed = mobileMenu.classList.contains('opacity-0');
+            if (isClosed) {
+                mobileMenu.classList.remove('opacity-0', 'pointer-events-none', '-translate-y-4');
+                mobileMenu.classList.add('opacity-100', 'translate-y-0');
+                // İkonu Çarpı (X) yap
+                mobileIcon.innerHTML = '<line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line>';
+            } else {
+                mobileMenu.classList.add('opacity-0', 'pointer-events-none', '-translate-y-4');
+                mobileMenu.classList.remove('opacity-100', 'translate-y-0');
+                // İkonu Hamburger yap
+                mobileIcon.innerHTML = '<line x1="4" y1="9" x2="20" y2="9"></line><line x1="4" y1="15" x2="20" y2="15"></line>';
+            }
+        }
+
+        mobileBtn.addEventListener('click', toggleMenu);
+        mobileLinks.forEach(link => link.addEventListener('click', toggleMenu));
+
+        /* -----------------------------------------------------------
+           3. Scroll Reveal Animations & Counter
+        ----------------------------------------------------------- */
+        const revealElements = document.querySelectorAll('.reveal');
+        
+        const revealCallback = (entries, observer) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    entry.target.classList.add('active');
+                    
+                    const counterEl = entry.target.querySelector('.counter-value') || (entry.target.classList.contains('counter-value') ? entry.target : null);
+                    if (counterEl && !counterEl.classList.contains('counted')) {
+                        counterEl.classList.add('counted');
+                        const target = parseFloat(counterEl.getAttribute('data-target'));
+                        const prefix = counterEl.getAttribute('data-prefix') || '';
+                        const suffix = counterEl.getAttribute('data-suffix') || '';
+                        const isFloat = counterEl.getAttribute('data-float') === 'true';
+                        
+                        let count = 0;
+                        const duration = 2000; 
+                        const interval = 30; 
+                        const steps = duration / interval;
+                        const increment = target / steps;
+                        
+                        const timer = setInterval(() => {
+                            count += increment;
+                            if(count >= target) {
+                                count = target;
+                                clearInterval(timer);
+                            }
+                            let displayValue = isFloat ? count.toFixed(1).replace('.', ',') : Math.floor(count);
+                            counterEl.innerText = prefix + displayValue + suffix;
+                        }, interval);
+                    }
+                    observer.unobserve(entry.target); 
+                }
+            });
+        };
+        
+        const revealObserver = new IntersectionObserver(revealCallback, { threshold: 0.15, rootMargin: "0px 0px -50px 0px" });
+        revealElements.forEach(el => revealObserver.observe(el));
+
+        /* -----------------------------------------------------------
+           4. Kayan Markalar (Marquee)
+        ----------------------------------------------------------- */
+        const marqueeTrack = document.getElementById('marquee-track');
+        const set1 = document.getElementById('marquee-set-1');
+        let mSpeed = 1.0;
+        let mTargetSpeed = 1.0;
+        let mPos = 0;
+        
+        document.querySelector('.marquee-wrapper').addEventListener('mouseenter', () => mTargetSpeed = 0.25);
+        document.querySelector('.marquee-wrapper').addEventListener('mouseleave', () => mTargetSpeed = 1.0);
+
+        function animateMarquee() {
+            if(!set1) return;
+            mSpeed += (mTargetSpeed - mSpeed) * 0.05;
+            mPos -= mSpeed; 
+            
+            if(Math.abs(mPos) >= set1.offsetWidth) {
+                mPos = 0;
+            }
+            
+            marqueeTrack.style.transform = `translateX(${mPos}px)`;
+            requestAnimationFrame(animateMarquee);
+        }
+        animateMarquee();
+
+        /* -----------------------------------------------------------
+           5. Fiyatlandırma Toggle
+        ----------------------------------------------------------- */
+        const btnMonthly = document.getElementById('btn-monthly');
+        const btnYearly = document.getElementById('btn-yearly');
+        const priceAmounts = document.querySelectorAll('.price-amount');
+        const pricingCards = document.querySelectorAll('.pricing-card-inner');
+
+        function togglePricing(isYearly) {
+            if (isYearly) {
+                btnYearly.classList.add('bg-blue-50', 'text-blue-600');
+                btnYearly.classList.remove('text-slate-600');
+                btnMonthly.classList.remove('bg-blue-50', 'text-blue-600');
+                btnMonthly.classList.add('text-slate-600');
+            } else {
+                btnMonthly.classList.add('bg-blue-50', 'text-blue-600');
+                btnMonthly.classList.remove('text-slate-600');
+                btnYearly.classList.remove('bg-blue-50', 'text-blue-600');
+                btnYearly.classList.add('text-slate-600');
+            }
+
+            pricingCards.forEach(card => {
+                card.classList.remove('animate-pop');
+                void card.offsetWidth; 
+                card.classList.add('animate-pop');
+            });
+
+            priceAmounts.forEach(p => {
+                p.classList.remove('animate-pop');
+                void p.offsetWidth; 
+                p.innerText = isYearly ? p.getAttribute('data-yearly') : p.getAttribute('data-monthly');
+                p.classList.add('animate-pop');
+            });
+        }
+
+        btnMonthly.addEventListener('click', () => togglePricing(false));
+        btnYearly.addEventListener('click', () => togglePricing(true));
+
+        /* -----------------------------------------------------------
+           6. 3D Tilt Effect on Mouse Move for Cards 
+        ----------------------------------------------------------- */
+        const tiltCards = document.querySelectorAll('.tilt-card');
+        tiltCards.forEach(card => {
+            if (window.matchMedia("(pointer: fine)").matches) {
+                card.addEventListener('mouseenter', () => card.style.transition = 'transform 0.15s ease-out');
+                card.addEventListener('mousemove', e => {
+                    const rect = card.getBoundingClientRect();
+                    const x = e.clientX - rect.left;
+                    const y = e.clientY - rect.top;
+                    const centerX = rect.width / 2;
+                    const centerY = rect.height / 2;
+                    const rotateX = ((y - centerY) / centerY) * -8;
+                    const rotateY = ((x - centerX) / centerX) * 8;
+                    requestAnimationFrame(() => {
+                        card.style.transform = `perspective(1000px) rotateX(${rotateX}deg) rotateY(${rotateY}deg) scale3d(1.02, 1.02, 1.02)`;
+                    });
+                });
+                card.addEventListener('mouseleave', () => {
+                    card.style.transition = 'transform 0.6s cubic-bezier(0.23, 1, 0.32, 1)';
+                    card.style.transform = `perspective(1000px) rotateX(0deg) rotateY(0deg) scale3d(1, 1, 1)`;
+                });
+            }
+        });
+
+        /* -----------------------------------------------------------
+           7. Three.js Background Animation (İnteraktif Veri Ağı)
+        ----------------------------------------------------------- */
+        const networkSettings = {
+            glowSize: 0.5,  
+            trailLength: 40 
+        };
+
+        function createGlowTexture() {
+            const canvas = document.createElement('canvas');
+            canvas.width = 64;
+            canvas.height = 64;
+            const ctx = canvas.getContext('2d');
+            const gradient = ctx.createRadialGradient(32, 32, 0, 32, 32, 32);
+            gradient.addColorStop(0, 'rgba(34, 159, 255, 1)'); 
+            gradient.addColorStop(0.4, 'rgba(34, 159, 255, 0.5)');
+            gradient.addColorStop(1, 'rgba(0, 0, 0, 0)');
+            ctx.fillStyle = gradient;
+            ctx.fillRect(0, 0, 64, 64);
+            return new THREE.CanvasTexture(canvas);
+        }
+
+        function initThreeJS() {
+            const logoSettings = {
+                rotX: 0.05, 
+                rotY: 1.1, 
+                rotZ: 0.0,
+                color: '#229fff',          
+                roughness: 0.3,           
+                metalness: 1.0,            
+                transmission: 1,         
+                transparent: true,         
+                opacity: 1.0,              
+                ior: 3.5,                  
+                thickness: 0.5,            
+                attenuationColor: '#229fff', 
+                attenuationDistance: 5.0,    
+                clearcoat: 4.0,            
+                clearcoatRoughness: 0.0,   
+                emissive: '#229fff',       
+                emissiveIntensity: 0.5
+            };
+
+            const container = document.getElementById('canvas-container');
+            const wrapper = document.getElementById('hero-wrapper');
+            if (!container || !wrapper) return;
+
+            const scene = new THREE.Scene();
+            scene.fog = new THREE.Fog(0xf8fafc, 20, 100);
+
+            const camera = new THREE.PerspectiveCamera(75, wrapper.offsetWidth / wrapper.offsetHeight, 0.1, 1000);
+            camera.position.z = 35;
+            camera.position.x = -5;
+            camera.position.y = -11;
+
+            const renderer = new THREE.WebGLRenderer({ alpha: true, antialias: true });
+            renderer.setSize(wrapper.offsetWidth, wrapper.offsetHeight);
+            renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+            renderer.outputEncoding = THREE.sRGBEncoding;
+            renderer.toneMapping = THREE.ACESFilmicToneMapping;
+            renderer.toneMappingExposure = 0.7;
+            container.appendChild(renderer.domElement);
+
+            const pmremGenerator = new THREE.PMREMGenerator(renderer);
+            pmremGenerator.compileEquirectangularShader();
+            scene.environment = pmremGenerator.fromScene(new THREE.RoomEnvironment(), 0.04).texture;
+
+            const ambientLight = new THREE.AmbientLight(0x229fff, 0.8); 
+            scene.add(ambientLight);
+            
+            const mainLight = new THREE.DirectionalLight(0x229fff, 1.2);
+            mainLight.position.set(10, 10, 10);
+            scene.add(mainLight);
+
+            const fillLight = new THREE.DirectionalLight(0x229fff, 0.1); 
+            fillLight.position.set(-10, 0, 5);
+            scene.add(fillLight);
+
+            const networkGroup = new THREE.Group();
+            scene.add(networkGroup);
+
+            const sphereRadius = 90; 
+            const nodeCount = 300; 
+            const nodesData = [];
+            const positions = new Float32Array(nodeCount * 3);
+            const phi = Math.PI * (3 - Math.sqrt(5)); 
+
+            for (let i = 0; i < nodeCount; i++) {
+                const y = 1 - (i / (nodeCount - 1)) * 2; 
+                const radiusAtY = Math.sqrt(Math.max(0, 1 - y * y)); // Safegaurd added to prevent NaN
+                const theta = phi * i; 
+                
+                const r = sphereRadius * (0.85 + Math.random() * 0.3);
+                const x = Math.cos(theta) * radiusAtY * r;
+                const z = Math.sin(theta) * radiusAtY * r;
+                const yScaled = y * r;
+
+                const pos = new THREE.Vector3(x, yScaled, z);
+                
+                nodesData.push({
+                    basePos: pos.clone(),
+                    currentPos: pos.clone(),
+                    targetPos: pos.clone()
+                });
+                
+                positions[i*3] = x; 
+                positions[i*3+1] = yScaled; 
+                positions[i*3+2] = z;
+            }
+
+            const pointGeo = new THREE.BufferGeometry();
+            pointGeo.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+            pointGeo.computeBoundingSphere();
+            
+            const pointMat = new THREE.PointsMaterial({ color: 0x229fff, size: 1.5, transparent: false, opacity: 0.9 });
+            const pointsMesh = new THREE.Points(pointGeo, pointMat);
+            networkGroup.add(pointsMesh);
+
+            const connections = Array.from({length: nodeCount}, () => []);
+            let totalLines = 0;
+            for (let i = 0; i < nodeCount; i++) {
+                for (let j = i + 1; j < nodeCount; j++) {
+                    if (nodesData[i].basePos.distanceTo(nodesData[j].basePos) < 28) { 
+                        connections[i].push(j);
+                        connections[j].push(i);
+                        totalLines++;
+                    }
+                }
+            }
+            
+            const linePositions = new Float32Array(totalLines * 6);
+            let initLineIdx = 0;
+            for (let i = 0; i < nodeCount; i++) {
+                for(let j=0; j<connections[i].length; j++) {
+                    const nIdx = connections[i][j];
+                    if (i < nIdx) {
+                        linePositions[initLineIdx++] = nodesData[i].basePos.x;
+                        linePositions[initLineIdx++] = nodesData[i].basePos.y;
+                        linePositions[initLineIdx++] = nodesData[i].basePos.z;
+                        linePositions[initLineIdx++] = nodesData[nIdx].basePos.x;
+                        linePositions[initLineIdx++] = nodesData[nIdx].basePos.y;
+                        linePositions[initLineIdx++] = nodesData[nIdx].basePos.z;
+                    }
+                }
+            }
+
+            const lineGeo = new THREE.BufferGeometry();
+            lineGeo.setAttribute('position', new THREE.BufferAttribute(linePositions, 3));
+            lineGeo.computeBoundingSphere();
+            
+            const lineMat = new THREE.LineBasicMaterial({ color: 0x229fff, transparent: false, opacity: 0.25 });
+            const linesMesh = new THREE.LineSegments(lineGeo, lineMat);
+            networkGroup.add(linesMesh);
+
+            const dataCount = 250; 
+            const trailLength = networkSettings.trailLength; 
+            const dataFlows = [];
+            const glowTex = createGlowTexture();
+            const spriteMat = new THREE.SpriteMaterial({
+                map: glowTex,
+                color: 0x229fff,
+                transparent: true,
+                opacity: 1,
+                blending: THREE.NormalBlending,
+                depthWrite: false
+            });
+
+            for (let i = 0; i < dataCount; i++) {
+                let start = Math.floor(Math.random() * nodeCount);
+                while(connections[start].length === 0) start = Math.floor(Math.random() * nodeCount);
+                let end = connections[start][Math.floor(Math.random() * connections[start].length)];
+                
+                const sprites = [];
+                for(let j=0; j<trailLength; j++){
+                    const sp = new THREE.Sprite(spriteMat.clone());
+                    sp.scale.set(0,0,0);
+                    networkGroup.add(sp);
+                    sprites.push(sp);
+                }
+
+                dataFlows.push({
+                    start: start,
+                    end: end,
+                    progress: Math.random(),
+                    speed: 0.002 + Math.random() * 0.008,
+                    sprites: sprites,
+                    history: Array(trailLength).fill(nodesData[start].basePos.clone()) 
+                });
+            }
+
+            const logoMaterial = new THREE.MeshPhysicalMaterial({
+                color: new THREE.Color(logoSettings.color),
+                metalness: logoSettings.metalness,
+                roughness: logoSettings.roughness,
+                transmission: logoSettings.transmission,
+                transparent: logoSettings.transparent,
+                opacity: logoSettings.opacity,
+                ior: logoSettings.ior,
+                thickness: logoSettings.thickness,
+                attenuationColor: new THREE.Color(logoSettings.attenuationColor),
+                attenuationDistance: logoSettings.attenuationDistance,
+                clearcoat: logoSettings.clearcoat,
+                clearcoatRoughness: logoSettings.clearcoatRoughness,
+                emissive: new THREE.Color(logoSettings.emissive),
+                emissiveIntensity: logoSettings.emissiveIntensity,
+                side: THREE.DoubleSide 
+            });
+
+            const modelGroup = new THREE.Group();
+            scene.add(modelGroup);
+
+            const loader = new THREE.GLTFLoader();
+            loader.load('https://raw.githubusercontent.com/grafik-crypto/3d-modellerim/main/tamlogobevel2.glb', function (gltf) {
+                const baseModel = gltf.scene;
+                
+                const box = new THREE.Box3().setFromObject(baseModel);
+                const center = box.getCenter(new THREE.Vector3());
+                baseModel.position.sub(center); 
+                
+                baseModel.traverse((child) => {
+                    if (child.isMesh) {
+                        child.geometry.computeVertexNormals();
+                        child.material = logoMaterial;
+                    }
+                });
+
+                baseModel.rotation.set(logoSettings.rotX, logoSettings.rotY, logoSettings.rotZ);
+
+                const size = box.getSize(new THREE.Vector3());
+                const maxDimension = Math.max(size.x, size.y, size.z);
+                const targetSize = wrapper.offsetWidth > 1024 ? 15 : 7; 
+                const scale = targetSize / maxDimension;
+                baseModel.scale.set(scale, scale, scale);
+                
+                modelGroup.add(baseModel);
+
+                if (wrapper.offsetWidth > 1024) {
+                    modelGroup.position.set(6, 0, 0); 
+                } else {
+                    modelGroup.position.set(0, 4, -2); 
+                }
+            });
+
+            let mouseX = 0;
+            let mouseY = 0;
+            let targetRotationX = 0;
+            let targetRotationY = 0;
+            let currentRotationX = 0;
+            let currentRotationY = 0;
+            
+            const raycaster = new THREE.Raycaster();
+            const mouseVec = new THREE.Vector2(9999, 9999); 
+
+            if (window.matchMedia("(pointer: fine)").matches) {
+                document.addEventListener('mousemove', (event) => {
+                    mouseX = (event.clientX / window.innerWidth) - 0.5; 
+                    mouseY = (event.clientY / window.innerHeight) - 0.5;
+                    mouseVec.x = (event.clientX / window.innerWidth) * 2 - 1;
+                    mouseVec.y = -(event.clientY / window.innerHeight) * 2 + 1;
+                });
+            }
+
+            const resizeObserver = new ResizeObserver(() => {
+                if(!wrapper.offsetWidth || !wrapper.offsetHeight) return;
+                
+                camera.aspect = wrapper.offsetWidth / wrapper.offsetHeight;
+                camera.updateProjectionMatrix();
+                renderer.setSize(wrapper.offsetWidth, wrapper.offsetHeight);
+
+                if (modelGroup.children.length > 0) {
+                    const model = modelGroup.children[0];
+                    const box = new THREE.Box3().setFromObject(modelGroup);
+                    const size = box.getSize(new THREE.Vector3());
+                    const maxDim = Math.max(size.x / model.scale.x, size.y / model.scale.y, size.z / model.scale.z);
+                    
+                    if (wrapper.offsetWidth > 1024) {
+                        modelGroup.position.set(6, 0, 0);
+                        const s = 15 / maxDim;
+                        model.scale.set(s, s, s);
+                    } else {
+                        modelGroup.position.set(0, 4, -2);
+                        const s = 7 / maxDim;
+                        model.scale.set(s, s, s);
+                    }
+                }
+            });
+            resizeObserver.observe(wrapper);
+
+            let time = 0;
+            function animate() {
+                requestAnimationFrame(animate);
+                time += 0.01;
+
+                networkGroup.rotation.y += 0.0005;
+                networkGroup.rotation.x += 0.0002;
+                networkGroup.updateMatrixWorld();
+
+                const posArray = pointsMesh.geometry.attributes.position.array;
+                
+                // HATA ÇÖZÜMÜ: Eğer mouseVec tanımsızsa veya sahneye girmediyse (9999) raycaster çalıştırma
+                if (mouseVec.x !== 9999) {
+                    raycaster.setFromCamera(mouseVec, camera);
+                    const invMat = new THREE.Matrix4().copy(networkGroup.matrixWorld).invert();
+                    const localRay = new THREE.Ray().copy(raycaster.ray).applyMatrix4(invMat);
+
+                    for(let i = 0; i < nodeCount; i++) {
+                        const data = nodesData[i];
+                        const closestPoint = new THREE.Vector3();
+                        localRay.closestPointToPoint(data.basePos, closestPoint);
+                        
+                        const dist = closestPoint.distanceTo(data.basePos);
+                        const repelRadius = 50; 
+                        const maxPush = 3;     
+                        
+                        // HATA ÇÖZÜMÜ: dist == 0 ise vektör oluşturulamayacağından NaN oluşur. dist > 0.01 kontrolü eklendi.
+                        if (dist < repelRadius && dist > 0.01) { 
+                            const force = (repelRadius - dist) / repelRadius;
+                            const dir = data.basePos.clone().sub(closestPoint);
+                            
+                            // HATA ÇÖZÜMÜ: Sinyal boyutu 0 olan vektörler normalize edilmez (NaN return eder)
+                            if (dir.lengthSq() > 0.0001) {
+                                dir.normalize();
+                                data.targetPos.copy(data.basePos).add(dir.multiplyScalar(force * maxPush));
+                            } else {
+                                data.targetPos.copy(data.basePos);
+                            }
+                        } else {
+                            data.targetPos.copy(data.basePos);
+                        }
+                        
+                        data.currentPos.lerp(data.targetPos, 0.1);
+                        posArray[i*3] = data.currentPos.x;
+                        posArray[i*3+1] = data.currentPos.y;
+                        posArray[i*3+2] = data.currentPos.z;
+                    }
+                } else {
+                    for(let i = 0; i < nodeCount; i++) {
+                        const data = nodesData[i];
+                        data.targetPos.copy(data.basePos);
+                        data.currentPos.lerp(data.targetPos, 0.1);
+                        posArray[i*3] = data.currentPos.x;
+                        posArray[i*3+1] = data.currentPos.y;
+                        posArray[i*3+2] = data.currentPos.z;
+                    }
+                }
+                
+                pointsMesh.geometry.attributes.position.needsUpdate = true;
+
+                let lineIdx = 0;
+                for (let i = 0; i < nodeCount; i++) {
+                    for(let j=0; j<connections[i].length; j++) {
+                        const nIdx = connections[i][j];
+                        if (i < nIdx) {
+                            linePositions[lineIdx++] = nodesData[i].currentPos.x;
+                            linePositions[lineIdx++] = nodesData[i].currentPos.y;
+                            linePositions[lineIdx++] = nodesData[i].currentPos.z;
+                            linePositions[lineIdx++] = nodesData[nIdx].currentPos.x;
+                            linePositions[lineIdx++] = nodesData[nIdx].currentPos.y;
+                            linePositions[lineIdx++] = nodesData[nIdx].currentPos.z;
+                        }
+                    }
+                }
+                linesMesh.geometry.attributes.position.needsUpdate = true;
+
+                for(let i=0; i<dataCount; i++) {
+                    const flow = dataFlows[i];
+                    flow.progress += flow.speed;
+                    
+                    if (flow.progress >= 1.0) {
+                        flow.progress = 0;
+                        flow.start = flow.end;
+                        
+                        // HATA ÇÖZÜMÜ: Eğer sonrakı nokta dead-end (çıkmaz sokak) ise flow undefined olur ve lerpVectors NaN basar.
+                        if(connections[flow.start] && connections[flow.start].length > 0) {
+                            flow.end = connections[flow.start][Math.floor(Math.random() * connections[flow.start].length)];
+                        } else {
+                            let newStart = Math.floor(Math.random() * nodeCount);
+                            while(!connections[newStart] || connections[newStart].length === 0) newStart = Math.floor(Math.random() * nodeCount);
+                            flow.start = newStart;
+                            flow.end = connections[flow.start][Math.floor(Math.random() * connections[flow.start].length)];
+                        }
+                    }
+                    
+                    const sPos = nodesData[flow.start].currentPos;
+                    const ePos = nodesData[flow.end].currentPos;
+                    const currentPos = new THREE.Vector3().lerpVectors(sPos, ePos, flow.progress);
+                    
+                    flow.history.unshift(currentPos);
+                    flow.history.pop();
+                    
+                    for(let j=0; j<trailLength; j++) {
+                        const sp = flow.sprites[j];
+                        sp.position.copy(flow.history[j]);
+                        
+                        const size = Math.max(0, networkSettings.glowSize * (1 - j / trailLength));
+                        sp.scale.set(size, size, 1);
+                        sp.material.opacity = Math.max(0, 1 - j / trailLength);
+                    }
+                }
+
+                if (modelGroup.children.length > 0) {
+                    targetRotationY = mouseX * 0.5;
+                    targetRotationX = mouseY * 0.5;
+
+                    currentRotationX += (targetRotationX - currentRotationX) * 0.05;
+                    currentRotationY += (targetRotationY - currentRotationY) * 0.05;
+
+                    modelGroup.rotation.x = currentRotationX;
+                    modelGroup.rotation.y = currentRotationY;
+                    modelGroup.position.y = Math.sin(time * 1.5) * 0.3;
+                }
+
+                renderer.render(scene, camera);
+            }
+            
+            animate();
+        }
+
+        window.onload = () => {
+            initThreeJS();
+            
+            setTimeout(() => {
+                const authGroup = document.getElementById('auth-group');
+                const uyeOlText = document.getElementById('uye-ol-text');
+                
+                if (authGroup && uyeOlText) {
+                    authGroup.classList.remove('w-[145px]');
+                    authGroup.classList.add('w-[260px]');
+                    
+                    uyeOlText.style.transitionDelay = '350ms';
+                    uyeOlText.classList.remove('opacity-0');
+                    uyeOlText.classList.add('opacity-100');
+
+                    document.body.classList.add('auth-expanded');
+                }
+            }, 1500); 
+
+            setTimeout(() => {
+                const waWidget = document.getElementById('wa-widget');
+                if(waWidget) {
+                    waWidget.classList.remove('translate-y-20', 'opacity-0', 'pointer-events-none');
+                }
+            }, 3000);
+        };
+
+        document.getElementById('wa-close').addEventListener('click', () => {
+            const bubble = document.getElementById('wa-bubble');
+            const icon = document.getElementById('wa-icon');
+            
+            bubble.classList.add('scale-0', 'opacity-0');
+            setTimeout(() => {
+                bubble.classList.add('hidden');
+                icon.classList.remove('hidden');
+                icon.classList.add('animate-pop');
+            }, 300);
+        });
+
+        document.getElementById('wa-icon').addEventListener('click', () => {
+            const bubble = document.getElementById('wa-bubble');
+            const icon = document.getElementById('wa-icon');
+            
+            icon.classList.add('hidden');
+            bubble.classList.remove('hidden');
+            setTimeout(() => {
+                bubble.classList.remove('scale-0', 'opacity-0');
+            }, 10);
+        });
+
+    </script>
+</body>
+</html>
