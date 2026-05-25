@@ -336,21 +336,21 @@
                     <div class="glass-dashboard tilt-card rounded-3xl p-6 sm:p-10 border border-white/80">
                         <div class="tilt-content">
                             <div class="flex flex-col sm:flex-row sm:justify-between sm:items-center mb-8 border-b border-slate-200/60 pb-6 gap-4 sm:gap-0">
-                                <div>
-                                    <p class="text-sm sm:text-base text-slate-500 font-medium mb-1">Bugünkü Net Cirom</p>
-                                    <h3 class="text-4xl sm:text-5xl font-bold text-slate-800 flex items-center gap-3">389.102 ₺ <span class="text-xs sm:text-sm font-bold text-emerald-600 bg-emerald-50 px-3 py-1.5 rounded-lg border border-emerald-100">↑ %12.4</span></h3>
-                                    <p class="text-xs sm:text-sm text-slate-400 mt-2">Dünkü Net Cirom: 346.013 ₺</p>
+                                <div id="dash-text-content" class="transition-opacity duration-300">
+                                    <p id="dash-title" class="text-sm sm:text-base text-slate-500 font-medium mb-1">Bugünkü Net Cirom</p>
+                                    <h3 class="text-4xl sm:text-5xl font-bold text-slate-800 flex items-center gap-3"><span id="dash-revenue">389.102</span> ₺ <span id="dash-trend" class="text-xs sm:text-sm font-bold text-emerald-600 bg-emerald-50 px-3 py-1.5 rounded-lg border border-emerald-100 transition-colors duration-300">↑ %12.4</span></h3>
+                                    <p id="dash-prev" class="text-xs sm:text-sm text-slate-400 mt-2">Dünkü Net Cirom: 346.013 ₺</p>
                                 </div>
-                                <div class="flex gap-2 sm:gap-3 text-xs sm:text-sm font-semibold w-full sm:w-auto">
-                                    <button class="flex-1 sm:flex-none bg-[#229fff] text-white px-4 py-2 rounded-lg shadow-md">Bugün</button>
-                                    <button class="flex-1 sm:flex-none bg-white/70 text-slate-600 border border-slate-200 px-4 py-2 rounded-lg shadow-sm transition hover:bg-white">Dün</button>
-                                    <button class="flex-1 sm:flex-none bg-white/70 text-slate-600 border border-slate-200 px-4 py-2 rounded-lg shadow-sm transition hover:bg-white">Son 7 Gün</button>
+                                <div class="flex gap-2 sm:gap-3 text-xs sm:text-sm font-semibold w-full sm:w-auto" id="dash-buttons">
+                                    <button data-period="bugun" class="dash-btn flex-1 sm:flex-none bg-[#229fff] text-white px-4 py-2 rounded-lg shadow-md transition-all duration-300">Bugün</button>
+                                    <button data-period="dun" class="dash-btn flex-1 sm:flex-none bg-white/70 text-slate-600 border border-slate-200 px-4 py-2 rounded-lg shadow-sm transition-all hover:bg-white duration-300">Dün</button>
+                                    <button data-period="7gun" class="dash-btn flex-1 sm:flex-none bg-white/70 text-slate-600 border border-slate-200 px-4 py-2 rounded-lg shadow-sm transition-all hover:bg-white duration-300">Son 7 Gün</button>
                                 </div>
                             </div>
                             
                             <!-- Yukarı Yönlü ve Dinamik Animasyonlu Kesilmeyen SVG Chart -->
-                            <div class="w-full relative overflow-visible">
-                                <svg viewBox="0 0 800 200" class="w-full h-auto drop-shadow-md overflow-visible">
+                            <div id="dash-chart-wrapper" class="w-full relative overflow-visible transition-opacity duration-300">
+                                <svg id="dash-svg" viewBox="0 0 800 200" class="w-full h-auto drop-shadow-md overflow-visible">
                                     <!-- Grid lines -->
                                     <path d="M0,40 L800,40 M0,100 L800,100 M0,160 L800,160" stroke="#e2e8f0" stroke-width="1.5" stroke-dasharray="6" fill="none"></path>
                                     
@@ -366,7 +366,7 @@
                                     <circle class="pulse-dot" cx="600" cy="50" r="5" fill="#229fff" stroke="white" stroke-width="3"></circle>
                                     <circle class="pulse-dot" cx="800" cy="25" r="5" fill="#229fff" stroke="white" stroke-width="3"></circle>
                                 </svg>
-                                <div class="flex justify-between text-xs sm:text-sm text-slate-500 mt-4 px-2 font-medium">
+                                <div id="dash-labels" class="flex justify-between text-xs sm:text-sm text-slate-500 mt-4 px-2 font-medium">
                                     <span>00:00</span>
                                     <span>06:00</span>
                                     <span>12:00</span>
@@ -384,9 +384,9 @@
         <section id="marquee" class="py-10 bg-white/50 backdrop-blur-md border-t border-slate-200/50 relative z-10 overflow-hidden">
             <div class="max-w-full mx-auto text-center">
                 <p class="text-xs sm:text-sm font-medium text-slate-500 mb-8 px-4">Türkiye'nin büyüyen markaları operasyonlarını Tam Entegre ile yönetiyor</p>
-                <div class="marquee-wrapper relative w-full overflow-hidden flex cursor-pointer">
+                <div class="marquee-wrapper relative w-full overflow-hidden flex cursor-grab select-none">
                     <!-- MARKA RENKLERİ BURADA BELİRTİLMİŞTİR (hover:text-[RENK]) -->
-                    <div id="marquee-track" class="flex w-max opacity-70 transition-opacity duration-300 hover:opacity-100">
+                    <div id="marquee-track" class="flex w-max opacity-70 transition-opacity duration-300 hover:opacity-100 select-none">
                         
                         <!-- SET 1 -->
                         <div id="marquee-set-1" class="flex items-center gap-12 sm:gap-20 flex-shrink-0 px-6 sm:px-10">
@@ -915,24 +915,80 @@
         revealElements.forEach(el => revealObserver.observe(el));
 
         /* -----------------------------------------------------------
-           4. Kayan Markalar (Marquee)
+           4. Kayan Markalar (Marquee) Tut-Kaydır & Auto Loop
         ----------------------------------------------------------- */
         const marqueeTrack = document.getElementById('marquee-track');
         const set1 = document.getElementById('marquee-set-1');
+        const marqueeWrapper = document.querySelector('.marquee-wrapper');
+        
         let mSpeed = 1.0;
         let mTargetSpeed = 1.0;
         let mPos = 0;
+        let isDragging = false;
+        let startX = 0;
         
-        document.querySelector('.marquee-wrapper').addEventListener('mouseenter', () => mTargetSpeed = 0.25);
-        document.querySelector('.marquee-wrapper').addEventListener('mouseleave', () => mTargetSpeed = 1.0);
+        marqueeWrapper.addEventListener('mouseenter', () => { if(!isDragging) mTargetSpeed = 0.25; });
+        marqueeWrapper.addEventListener('mouseleave', () => { 
+            mTargetSpeed = 1.0; 
+            isDragging = false; 
+            marqueeWrapper.style.cursor = 'grab'; 
+        });
+
+        // Mouse (Masaüstü) Sürükleme
+        marqueeWrapper.addEventListener('mousedown', (e) => {
+            isDragging = true;
+            startX = e.pageX;
+            marqueeWrapper.style.cursor = 'grabbing';
+        });
+        
+        marqueeWrapper.addEventListener('mousemove', (e) => {
+            if (!isDragging) return;
+            e.preventDefault(); // Metin seçimini engelle
+            const x = e.pageX;
+            const walk = (x - startX) * 1.5; // Sürükleme hassasiyeti
+            mPos += walk;
+            startX = x;
+        });
+        
+        marqueeWrapper.addEventListener('mouseup', () => {
+            isDragging = false;
+            marqueeWrapper.style.cursor = 'grab';
+        });
+
+        // Dokunmatik (Mobil) Sürükleme
+        marqueeWrapper.addEventListener('touchstart', (e) => {
+            isDragging = true;
+            startX = e.touches[0].pageX;
+        });
+        
+        marqueeWrapper.addEventListener('touchmove', (e) => {
+            if (!isDragging) return;
+            const x = e.touches[0].pageX;
+            const walk = (x - startX) * 1.5;
+            mPos += walk;
+            startX = x;
+        });
+        
+        marqueeWrapper.addEventListener('touchend', () => {
+            isDragging = false;
+        });
 
         function animateMarquee() {
             if(!set1) return;
-            mSpeed += (mTargetSpeed - mSpeed) * 0.05;
-            mPos -= mSpeed; 
             
-            if(Math.abs(mPos) >= set1.offsetWidth) {
-                mPos = 0;
+            // Eğer sürüklenmiyorsa otomatik akmaya devam et
+            if (!isDragging) {
+                mSpeed += (mTargetSpeed - mSpeed) * 0.05;
+                mPos -= mSpeed; 
+            }
+            
+            const maxScroll = set1.offsetWidth;
+            
+            // Sola veya sağa çekildiğinde kusursuz loop
+            if (mPos <= -maxScroll) {
+                mPos += maxScroll;
+            } else if (mPos > 0) {
+                mPos -= maxScroll;
             }
             
             marqueeTrack.style.transform = `translateX(${mPos}px)`;
@@ -1398,6 +1454,7 @@
                         const sp = flow.sprites[j];
                         sp.position.copy(flow.history[j]);
                         
+                        // Küçültülmüş Parıltı (Glow) Ayarı Kullanılıyor
                         const size = Math.max(0, networkSettings.glowSize * (1 - j / trailLength));
                         sp.scale.set(size, size, 1);
                         sp.material.opacity = Math.max(0, 1 - j / trailLength);
@@ -1471,6 +1528,111 @@
             setTimeout(() => {
                 bubble.classList.remove('scale-0', 'opacity-0');
             }, 10);
+        });
+
+        /* -----------------------------------------------------------
+           8. Dashboard (Grafik) Buton Etkileşimleri ve Animasyonlar
+        ----------------------------------------------------------- */
+        const dashboardData = {
+            'bugun': {
+                title: 'Bugünkü Net Cirom',
+                revenue: '389.102',
+                trend: '↑ %12.4',
+                trendClass: 'text-emerald-600 bg-emerald-50 border-emerald-100',
+                prevText: 'Dünkü Net Cirom: 346.013 ₺',
+                labels: ['00:00', '06:00', '12:00', '18:00', '24:00'],
+                svg: `
+                    <path d="M0,40 L800,40 M0,100 L800,100 M0,160 L800,160" stroke="#e2e8f0" stroke-width="1.5" stroke-dasharray="6" fill="none"></path>
+                    <path class="animated-path-gray" d="M0,180 Q100,180 200,140 T400,110 T600,70 T800,50" stroke="#cbd5e1" stroke-width="3" fill="none"></path>
+                    <path class="animated-path-blue" d="M0,170 Q100,170 200,120 T400,90 T600,50 T800,25" stroke="#229fff" stroke-width="4" fill="none" class="drop-shadow-[0_6px_8px_rgba(34,159,255,0.4)]"></path>
+                    <circle class="pulse-dot" cx="200" cy="120" r="5" fill="#229fff" stroke="white" stroke-width="3"></circle>
+                    <circle class="pulse-dot" cx="400" cy="90" r="5" fill="#229fff" stroke="white" stroke-width="3"></circle>
+                    <circle class="pulse-dot" cx="600" cy="50" r="5" fill="#229fff" stroke="white" stroke-width="3"></circle>
+                    <circle class="pulse-dot" cx="800" cy="25" r="5" fill="#229fff" stroke="white" stroke-width="3"></circle>
+                `
+            },
+            'dun': {
+                title: 'Dünkü Net Cirom',
+                revenue: '346.013',
+                trend: '↑ %8.5',
+                trendClass: 'text-emerald-600 bg-emerald-50 border-emerald-100',
+                prevText: 'Önceki Gün Net Cirom: 318.900 ₺',
+                labels: ['00:00', '06:00', '12:00', '18:00', '24:00'],
+                svg: `
+                    <path d="M0,40 L800,40 M0,100 L800,100 M0,160 L800,160" stroke="#e2e8f0" stroke-width="1.5" stroke-dasharray="6" fill="none"></path>
+                    <path class="animated-path-gray" d="M0,190 Q100,190 200,160 T400,130 T600,100 T800,80" stroke="#cbd5e1" stroke-width="3" fill="none"></path>
+                    <path class="animated-path-blue" d="M0,180 Q100,180 200,140 T400,110 T600,70 T800,50" stroke="#229fff" stroke-width="4" fill="none" class="drop-shadow-[0_6px_8px_rgba(34,159,255,0.4)]"></path>
+                    <circle class="pulse-dot" cx="200" cy="140" r="5" fill="#229fff" stroke="white" stroke-width="3"></circle>
+                    <circle class="pulse-dot" cx="400" cy="110" r="5" fill="#229fff" stroke="white" stroke-width="3"></circle>
+                    <circle class="pulse-dot" cx="600" cy="70" r="5" fill="#229fff" stroke="white" stroke-width="3"></circle>
+                    <circle class="pulse-dot" cx="800" cy="50" r="5" fill="#229fff" stroke="white" stroke-width="3"></circle>
+                `
+            },
+            '7gun': {
+                title: 'Son 7 Gün Net Cirom',
+                revenue: '2.450.800',
+                trend: '↑ %18.2',
+                trendClass: 'text-blue-600 bg-blue-50 border-blue-100', // Farklılaştırmak için trend rengini maviye çektik
+                prevText: 'Önceki 7 Gün Net Cirom: 2.073.430 ₺',
+                labels: ['Pzt', 'Sal', 'Çar', 'Per', 'Cum', 'Cmt', 'Paz'],
+                svg: `
+                    <path d="M0,40 L800,40 M0,100 L800,100 M0,160 L800,160" stroke="#e2e8f0" stroke-width="1.5" stroke-dasharray="6" fill="none"></path>
+                    <path class="animated-path-gray" d="M0,160 Q66,160 133,140 T266,130 T400,120 T533,90 T666,70 T800,60" stroke="#cbd5e1" stroke-width="3" fill="none"></path>
+                    <path class="animated-path-blue" d="M0,150 Q66,140 133,110 T266,100 T400,80 T533,50 T666,35 T800,15" stroke="#229fff" stroke-width="4" fill="none" class="drop-shadow-[0_6px_8px_rgba(34,159,255,0.4)]"></path>
+                    <circle class="pulse-dot" cx="133" cy="110" r="5" fill="#229fff" stroke="white" stroke-width="3"></circle>
+                    <circle class="pulse-dot" cx="266" cy="100" r="5" fill="#229fff" stroke="white" stroke-width="3"></circle>
+                    <circle class="pulse-dot" cx="400" cy="80" r="5" fill="#229fff" stroke="white" stroke-width="3"></circle>
+                    <circle class="pulse-dot" cx="533" cy="50" r="5" fill="#229fff" stroke="white" stroke-width="3"></circle>
+                    <circle class="pulse-dot" cx="666" cy="35" r="5" fill="#229fff" stroke="white" stroke-width="3"></circle>
+                    <circle class="pulse-dot" cx="800" cy="15" r="5" fill="#229fff" stroke="white" stroke-width="3"></circle>
+                `
+            }
+        };
+
+        const dashBtns = document.querySelectorAll('.dash-btn');
+        const dashTitle = document.getElementById('dash-title');
+        const dashRevenue = document.getElementById('dash-revenue');
+        const dashTrend = document.getElementById('dash-trend');
+        const dashPrev = document.getElementById('dash-prev');
+        const dashSvg = document.getElementById('dash-svg');
+        const dashLabels = document.getElementById('dash-labels');
+        const dashWrapper = document.getElementById('dash-chart-wrapper');
+        const dashTextWrapper = document.getElementById('dash-text-content');
+
+        dashBtns.forEach(btn => {
+            btn.addEventListener('click', () => {
+                // Aktif buton stilini değiştir
+                dashBtns.forEach(b => {
+                    b.className = "dash-btn flex-1 sm:flex-none bg-white/70 text-slate-600 border border-slate-200 px-4 py-2 rounded-lg shadow-sm transition-all hover:bg-white duration-300";
+                });
+                btn.className = "dash-btn flex-1 sm:flex-none bg-[#229fff] text-white px-4 py-2 rounded-lg shadow-md transition-all duration-300";
+
+                const period = btn.getAttribute('data-period');
+                const data = dashboardData[period];
+
+                // Sahneyi yumuşakça gizle (Fade Out)
+                dashWrapper.classList.add('opacity-0');
+                dashTextWrapper.classList.add('opacity-0');
+
+                // Verileri ve grafiği değiştir
+                setTimeout(() => {
+                    dashTitle.innerText = data.title;
+                    dashRevenue.innerText = data.revenue;
+                    dashTrend.innerText = data.trend;
+                    dashTrend.className = "text-xs sm:text-sm font-bold px-3 py-1.5 rounded-lg border transition-colors duration-300 " + data.trendClass;
+                    dashPrev.innerText = data.prevText;
+                    
+                    dashSvg.innerHTML = data.svg;
+                    dashLabels.innerHTML = data.labels.map(l => `<span>${l}</span>`).join('');
+
+                    // SVG Çizim animasyonunu baştan tetiklemek için reflow (yeniden hesaplama) yap
+                    void dashSvg.offsetWidth;
+
+                    // Sahneyi yumuşakça geri getir (Fade In)
+                    dashWrapper.classList.remove('opacity-0');
+                    dashTextWrapper.classList.remove('opacity-0');
+                }, 300);
+            });
         });
 
     </script>
